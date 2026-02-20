@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(reg query HKCRCLSID /s /f SPC230)",
+      "Bash(powershell:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
