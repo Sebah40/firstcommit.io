@@ -130,6 +130,13 @@ The sum of all duration_messages should roughly equal the total user messages fo
             .describe(
               "Total user messages found across ALL session files. Must be the real count, not an estimate."
             ),
+          anonymous: z
+            .boolean()
+            .optional()
+            .default(false)
+            .describe(
+              "Set to true ONLY if the user explicitly confirmed they want to post without signing up. Do not set this on your own."
+            ),
           stages: z
             .array(
               z.object({
@@ -155,21 +162,45 @@ The sum of all duration_messages should roughly equal the total user messages fo
             .describe("4-12 chronological project stages covering the FULL project history"),
         },
       },
-      async ({ title, hook, body, techs, total_sessions_read, total_user_messages, stages }, extra) => {
+      async ({ title, hook, body, techs, total_sessions_read, total_user_messages, anonymous, stages }, extra) => {
         const userId = (extra.authInfo?.extra as { userId?: string })?.userId;
-        if (!userId) {
+
+        // Auth check shortcut
+        if (title === "__auth_check__") {
+          if (userId) {
+            return {
+              content: [
+                { type: "text" as const, text: "Auth OK. Proceed with reading session files." },
+              ],
+            };
+          }
+          // Not authenticated — offer anonymous posting
           return {
             content: [
-              { type: "text" as const, text: "Error: Authentication required. Do NOT continue. Tell the user to reauthenticate: /mcp then select firstcommit and reauthenticate." },
+              {
+                type: "text" as const,
+                text: [
+                  "You are NOT signed in to First Commit.",
+                  "",
+                  "You have two options:",
+                  "1. Sign up first: run `claude mcp add --transport http firstcommit https://firstcommit.io/api/mcp` and authenticate in the browser. Your post will be linked to your profile and you can edit/delete it later.",
+                  "2. Post anonymously: you can publish right now without an account, BUT you will NOT be able to edit or delete the post later. It's permanent.",
+                  "",
+                  "Ask the user: \"Would you like to sign up first, or post anonymously? (Anonymous posts can't be edited or deleted later.)\"",
+                  "",
+                  "If they choose anonymous, proceed with reading session files and set `anonymous: true` when calling this tool to publish.",
+                  "If they choose to sign up, tell them to run the MCP add command above and reauthenticate.",
+                ].join("\n"),
+              },
             ],
           };
         }
 
-        // Auth check shortcut
-        if (title === "__auth_check__") {
+        // For actual publish: require auth OR explicit anonymous flag
+        if (!userId && !anonymous) {
           return {
             content: [
-              { type: "text" as const, text: "Auth OK. Proceed with reading session files." },
+              { type: "text" as const, text: "Error: Authentication required and anonymous flag not set. Run the auth check first (title: \"__auth_check__\") to offer the user the choice." },
             ],
           };
         }
@@ -192,16 +223,18 @@ The sum of all duration_messages should roughly equal the total user messages fo
           0
         );
 
+        const postInsert: Record<string, unknown> = {
+          title: title.trim(),
+          hook_description: hook.trim(),
+          content: body.trim(),
+          techs,
+          message_count: totalMessages,
+        };
+        if (userId) postInsert.user_id = userId;
+
         const { data: post, error: postError } = (await supabase
           .from("posts")
-          .insert({
-            user_id: userId,
-            title: title.trim(),
-            hook_description: hook.trim(),
-            content: body.trim(),
-            techs,
-            message_count: totalMessages,
-          })
+          .insert(postInsert)
           .select("id")
           .single()) as { data: any; error: any };
 
@@ -245,20 +278,25 @@ The sum of all duration_messages should roughly equal the total user messages fo
           process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
         const postUrl = `${baseUrl}/guide/${post.id}/${slugify(title)}`;
 
+        const lines = [
+          `POST PUBLISHED!`,
+          ``,
+          `"${title}"`,
+          postUrl,
+          ``,
+          `${stages.length} stages | ${techs.join(", ")}`,
+          ``,
+          `"${hook}"`,
+        ];
+        if (!userId) {
+          lines.push(``, `Note: This was posted anonymously. It cannot be edited or deleted.`);
+        }
+
         return {
           content: [
             {
               type: "text" as const,
-              text: [
-                `POST PUBLISHED!`,
-                ``,
-                `"${title}"`,
-                postUrl,
-                ``,
-                `${stages.length} stages | ${techs.join(", ")}`,
-                ``,
-                `"${hook}"`,
-              ].join("\n"),
+              text: lines.join("\n"),
             },
           ],
         };

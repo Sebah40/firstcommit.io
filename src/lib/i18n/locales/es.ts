@@ -216,6 +216,16 @@ const es: Record<TranslationKey, string> = {
   "gallery.guidesFound": "{count} guía{plural} encontrada{plural}",
   "gallery.subtitle": "Guías paso a paso para construir con IA",
 
+  // ── Invite ──
+  "invite.title": "Invitar a un amigo",
+  "invite.subtitle": "Comparte First Commit con alguien que construye con IA",
+  "invite.sendEmail": "Enviar por correo",
+  "invite.shareX": "Compartir en X",
+  "invite.shareLinkedIn": "Compartir en LinkedIn",
+  "invite.emailSubject": "Mira First Commit",
+  "invite.emailBody": "Hey! He estado usando First Commit para compartir cómo construyo proyectos con IA. Deberías verlo:\n\n{url}",
+  "invite.xText": "He estado compartiendo mis historias de desarrollo en @firstcommitio — mira cómo los devs construyen con IA, paso a paso.\n\n{url}",
+
   // ── Media ──
   "media.addMedia": "Añadir media",
 

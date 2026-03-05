@@ -53,7 +53,7 @@ export function GuideDetailClient({
       const [likeStatus, saveStatus, followStatus] = await Promise.all([
         checkLikeStatus(guide.id, user!.id),
         checkSaveStatus(guide.id, user!.id),
-        guide.profile && guide.user_id !== user!.id
+        guide.profile && guide.user_id && guide.user_id !== user!.id
           ? checkFollowStatus(user!.id, guide.user_id)
           : Promise.resolve(false),
       ]);

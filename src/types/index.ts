@@ -39,7 +39,7 @@ export type GuideType =
 
 export interface Post {
   id: string;
-  user_id: string;
+  user_id: string | null;
   title: string;
   hook_description: string;
   techs: string[];

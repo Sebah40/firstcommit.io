@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { Search, LogOut, User, Terminal, Languages } from "lucide-react";
+import { Search, LogOut, User, Terminal, Languages, UserPlus } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Avatar } from "@/components/ui/avatar";
 import { Logo } from "@/components/ui/logo";
@@ -12,12 +12,14 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/use-translation";
 import { LOCALES } from "@/lib/i18n";
+import { InviteModal } from "@/components/invite/invite-modal";
 
 export function Navbar() {
   const { user, profile, loading } = useAuth();
   const { t, locale, setLocale } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -88,6 +90,13 @@ export function Navbar() {
 
         {user ? (
           <>
+            <button
+              onClick={() => setInviteOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+              title={t("invite.title")}
+            >
+              <UserPlus size={18} />
+            </button>
             <Link
               href="/connect"
               className="flex h-9 items-center gap-1.5 rounded-full bg-muted px-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -148,6 +157,15 @@ export function Navbar() {
           </Link>
         )}
       </div>
+
+      {/* Invite modal */}
+      {user && profile && (
+        <InviteModal
+          open={inviteOpen}
+          onClose={() => setInviteOpen(false)}
+          username={profile.username}
+        />
+      )}
 
       {/* Language modal */}
       {langOpen && (
