@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/use-translation";
+import { Mail, Sparkles } from "lucide-react";
 
 export default function RegisterPage() {
   const [username, setUsername] = useState("");
@@ -13,7 +13,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [showConfirm, setShowConfirm] = useState(false);
   const { t } = useTranslation();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -48,8 +48,45 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push("/");
-    router.refresh();
+    setLoading(false);
+    setShowConfirm(true);
+  }
+
+  if (showConfirm) {
+    return (
+      <div className="flex min-h-[80vh] items-center justify-center">
+        <div className="w-full max-w-sm text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500">
+              <Mail size={24} className="text-white" />
+            </div>
+          </div>
+          <div className="mb-2 flex items-center justify-center gap-2">
+            <Sparkles size={16} className="text-accent" />
+            <h1 className="text-2xl font-bold text-foreground">Check your email</h1>
+            <Sparkles size={16} className="text-accent" />
+          </div>
+          <p className="mb-2 text-sm text-muted-foreground">
+            We sent a confirmation link to
+          </p>
+          <p className="mb-6 text-sm font-medium text-foreground">{email}</p>
+          <div className="rounded-xl bg-surface border border-border/40 p-4">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Click the link in your email to activate your account. Once confirmed, you can connect Claude Code and start publishing your build stories.
+            </p>
+          </div>
+          <p className="mt-6 text-xs text-muted-foreground">
+            Didn&apos;t get it? Check your spam folder or{" "}
+            <button
+              onClick={() => setShowConfirm(false)}
+              className="text-accent hover:underline"
+            >
+              try again
+            </button>
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

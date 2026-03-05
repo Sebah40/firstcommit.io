@@ -77,10 +77,10 @@ function StageCard({
       {/* Card */}
       <motion.div
         className="rounded-xl glass-card p-4 group"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
         viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
+        transition={{ duration: 0.3 }}
       >
         {/* Stage name */}
         <h3 className="text-lg font-semibold font-serif text-foreground group-hover:text-accent transition-colors">
