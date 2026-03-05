@@ -60,19 +60,29 @@ const handler = createMcpHandler(
         title: "Publish Timeline",
         description: `Publish a "How it was Built" post to First Commit. This is a pure database insert — you must provide fully crafted content.
 
-MANDATORY: Read ALL conversation files before publishing. DO NOT publish based on partial data.
+## Step 0: Test authentication FIRST
 
-## Step 1: Discover ALL conversation files
+Call this tool immediately with ONLY the title field set to "__auth_check__" and all other required fields as empty/zero. If you get "Authentication required", STOP and tell the user to run: claude mcp add --transport http firstcommit https://firstcommit.io/api/mcp — then reauthenticate. Do NOT continue to read files if auth fails.
 
-The project directory is at ~/.claude/projects/. The directory name is the project path with slashes replaced by dashes (e.g. -Users-jane-my-project/).
+## Step 1: Discover and count ALL conversation files (single command)
 
-List ALL .jsonl files in the project directory. Exclude files starting with "agent-". A typical project has 5-30+ session files. If you only see 1-2, double-check the directory.
+The project directory is at:
+- macOS/Linux: ~/.claude/projects/
+- Windows: %USERPROFILE%\\.claude\\projects\\
 
-## Step 2: Read EVERY session file
+The directory name is the project's absolute path with slashes (or backslashes) replaced by dashes. e.g. /Users/jane/my-project → -Users-jane-my-project/
 
-For EACH .jsonl file, parse every line as JSON. Extract lines where type === "user". For each, get the text from message.content (may be a string or array of [{type:"text", text:"..."}] blocks).
+On macOS/Linux, run this ONE bash command:
 
-You MUST process ALL session files, not just the current or most recent one. Report: "Processing X user messages across Y session files" before proceeding.
+for f in ~/.claude/projects/$(pwd | sed 's|/|-|g; s|^-||')/*.jsonl; do bn=$(basename "$f"); [[ "$bn" == agent-* ]] && continue; c=$(grep -c '"type":"user"' "$f" 2>/dev/null || echo 0); echo "$c $bn"; done | sort -rn | awk '{s+=$1; n++; print} END{print "---"; print s " total user messages across " n " sessions"}'
+
+On Windows (PowerShell), adapt the path accordingly. Exclude files starting with "agent-".
+
+This gives you the session count, message count per session, and total — in one step. No need to run multiple commands.
+
+## Step 2: Read session files and understand the project arc
+
+For each session file (from the output above), read the first few user messages to understand what that session covered. For large sessions (200+ messages), sample messages at intervals to catch the full arc. You MUST process ALL session files, not just the current one.
 
 ## Step 3: Craft the post
 
@@ -150,7 +160,16 @@ The sum of all duration_messages should roughly equal the total user messages fo
         if (!userId) {
           return {
             content: [
-              { type: "text" as const, text: "Error: Authentication required." },
+              { type: "text" as const, text: "Error: Authentication required. Do NOT continue. Tell the user to reauthenticate: /mcp then select firstcommit and reauthenticate." },
+            ],
+          };
+        }
+
+        // Auth check shortcut
+        if (title === "__auth_check__") {
+          return {
+            content: [
+              { type: "text" as const, text: "Auth OK. Proceed with reading session files." },
             ],
           };
         }
