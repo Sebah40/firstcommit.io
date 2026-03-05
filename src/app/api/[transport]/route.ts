@@ -230,7 +230,7 @@ The sum of all duration_messages should roughly equal the total user messages fo
           techs,
           message_count: totalMessages,
         };
-        if (userId) postInsert.user_id = userId;
+        if (userId && !anonymous) postInsert.user_id = userId;
 
         const { data: post, error: postError } = (await supabase
           .from("posts")
@@ -288,7 +288,7 @@ The sum of all duration_messages should roughly equal the total user messages fo
           ``,
           `"${hook}"`,
         ];
-        if (!userId) {
+        if (!userId || anonymous) {
           lines.push(``, `Note: This was posted anonymously. It cannot be edited or deleted.`);
         }
 
