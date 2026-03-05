@@ -17,8 +17,8 @@ export function GuideCard({ guide }: GuideCardProps) {
   const { t } = useTranslation();
 
   const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { duration: 0.3 } },
   };
 
   return (

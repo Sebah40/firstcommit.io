@@ -92,9 +92,9 @@ export function GuideDetailClient({
         {/* Left column */}
         <motion.div
           className="min-w-0 flex-1"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
         >
           {/* Media */}
           {guide.media && guide.media.length > 0 && (
@@ -107,9 +107,9 @@ export function GuideDetailClient({
           <div className="mb-6">
             <motion.h1
               className="mb-3 text-3xl md:text-4xl font-bold font-serif text-foreground tracking-tight"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
             >
               {guide.title}
             </motion.h1>
@@ -180,9 +180,9 @@ export function GuideDetailClient({
         {/* Right column (desktop sidebar) */}
         <motion.div
           className="hidden w-80 flex-shrink-0 lg:block"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
         >
           <div className="sticky top-20 flex flex-col gap-5">
             {guide.profile && (
