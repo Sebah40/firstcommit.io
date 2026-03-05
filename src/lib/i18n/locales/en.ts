@@ -214,6 +214,16 @@ const en = {
   "gallery.guidesFound": "{count} guide{plural} found",
   "gallery.subtitle": "Step-by-step guides for building with AI",
 
+  // ── Invite ──
+  "invite.title": "Invite a friend",
+  "invite.subtitle": "Share First Commit with someone who builds with AI",
+  "invite.sendEmail": "Send via email",
+  "invite.shareX": "Share on X",
+  "invite.shareLinkedIn": "Share on LinkedIn",
+  "invite.emailSubject": "Check out First Commit",
+  "invite.emailBody": "Hey! I've been using First Commit to share how I build projects with AI. You should check it out:\n\n{url}",
+  "invite.xText": "I've been sharing my build stories on @firstcommitio — see how devs build with AI, step by step.\n\n{url}",
+
   // ── Media ──
   "media.addMedia": "Add media",
 

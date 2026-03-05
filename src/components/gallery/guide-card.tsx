@@ -72,7 +72,7 @@ export function GuideCard({ guide }: GuideCardProps) {
           {/* Author + time */}
           <div className="mb-1.5 flex items-center gap-2">
             <Avatar
-              userId={guide.user_id}
+              userId={guide.user_id ?? "anon"}
               username={guide.profile?.username ?? "?"}
               avatarUrl={guide.profile?.avatar_url}
               size="sm"
