@@ -64,6 +64,7 @@ export interface Post {
   files_changed: number;
   highlight_snippet: string | null;
   content: string | null;
+  instance_url: string | null;
   // Joined
   profile?: Profile;
   category?: Category;

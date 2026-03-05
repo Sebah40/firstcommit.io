@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import { MediaGallery } from "@/components/guide/media-gallery";
 import { GuideActions } from "@/components/guide/guide-actions";
 import { AuthorCard } from "@/components/guide/author-card";
@@ -117,6 +117,17 @@ export function GuideDetailClient({
               <p className="mb-3 text-sm text-muted-foreground">{guide.hook_description}</p>
             )}
             <div className="flex flex-wrap items-center gap-2">
+              {guide.instance_url && (
+                <a
+                  href={guide.instance_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground hover:opacity-90 transition-opacity"
+                >
+                  <ExternalLink size={12} />
+                  {guide.instance_url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                </a>
+              )}
               {guide.techs.length > 0 &&
                 guide.techs.map((tech) => (
                   <span
