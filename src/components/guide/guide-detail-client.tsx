@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { MediaGallery } from "@/components/guide/media-gallery";
 import { GuideActions } from "@/components/guide/guide-actions";
 import { AuthorCard } from "@/components/guide/author-card";
 import { Recommendations } from "@/components/guide/recommendations";
-import { ChatTimeline } from "@/components/timeline/chat-timeline";
+import { StagesTimeline } from "@/components/timeline/stages-timeline";
 import { CommentSection } from "@/components/comments/comment-section";
 import {
   checkLikeStatus,
@@ -15,6 +16,7 @@ import {
   checkFollowStatus,
 } from "@/lib/supabase/queries/guide-detail";
 import { formatRelativeTime } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import type { GuideDetail, Comment, Guide } from "@/types";
 import type { User } from "@supabase/supabase-js";
 
@@ -36,6 +38,7 @@ export function GuideDetailClient({
   user,
   userProfile,
 }: GuideDetailClientProps) {
+  const { t } = useTranslation();
   const [guide, setGuide] = useState<GuideDetail>(initialGuide);
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -43,7 +46,6 @@ export function GuideDetailClient({
 
   const isOwner = !!user && user.id === guide.user_id;
 
-  // Fetch user-specific status once component mounts
   useEffect(() => {
     if (!user) return;
 
@@ -81,14 +83,19 @@ export function GuideDetailClient({
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft size={16} />
-          Back
+          {t("common.back")}
         </Link>
       </div>
 
       {/* Two-column layout */}
       <div className="flex flex-col gap-8 lg:flex-row">
         {/* Left column */}
-        <div className="min-w-0 flex-1">
+        <motion.div
+          className="min-w-0 flex-1"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
           {/* Media */}
           {guide.media && guide.media.length > 0 && (
             <div className="mb-6">
@@ -98,9 +105,16 @@ export function GuideDetailClient({
 
           {/* Title + meta */}
           <div className="mb-6">
-            <h1 className="mb-2 text-2xl font-bold text-foreground">{guide.title}</h1>
-            {guide.description && (
-              <p className="mb-3 text-sm text-muted-foreground">{guide.description}</p>
+            <motion.h1
+              className="mb-3 text-3xl md:text-4xl font-bold font-serif text-foreground tracking-tight"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              {guide.title}
+            </motion.h1>
+            {guide.hook_description && (
+              <p className="mb-3 text-sm text-muted-foreground">{guide.hook_description}</p>
             )}
             <div className="flex flex-wrap items-center gap-2">
               {guide.techs.length > 0 &&
@@ -146,15 +160,10 @@ export function GuideDetailClient({
             />
           </div>
 
-          {/* Chat timeline */}
-          {guide.chat_messages && guide.chat_messages.length > 0 && (
+          {/* Stages timeline */}
+          {guide.stages && guide.stages.length > 0 && (
             <div className="mb-8">
-              <ChatTimeline
-                messages={guide.chat_messages}
-                chapters={guide.timeline_chapters}
-                isOwner={isOwner}
-                postId={guide.id}
-              />
+              <StagesTimeline stages={guide.stages} />
             </div>
           )}
 
@@ -166,10 +175,15 @@ export function GuideDetailClient({
             userUsername={userProfile?.username}
             userAvatarUrl={userProfile?.avatar_url}
           />
-        </div>
+        </motion.div>
 
         {/* Right column (desktop sidebar) */}
-        <div className="hidden w-80 flex-shrink-0 lg:block">
+        <motion.div
+          className="hidden w-80 flex-shrink-0 lg:block"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+        >
           <div className="sticky top-20 flex flex-col gap-5">
             {guide.profile && (
               <AuthorCard
@@ -192,7 +206,7 @@ export function GuideDetailClient({
             />
             <Recommendations guides={recommended} />
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Mobile recommendations */}

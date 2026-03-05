@@ -1,7 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
 import type { Guide } from "@/types";
-import type { MediaFile } from "@/components/create/media-upload";
-import type { ParsedMessage } from "@/lib/parser/claude-code";
 
 export async function fetchGuides(sort: string = "trending", search?: string): Promise<Guide[]> {
   const supabase = createClient();
@@ -16,7 +14,7 @@ export async function fetchGuides(sort: string = "trending", search?: string): P
     .eq("is_hidden", false);
 
   if (search) {
-    query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+    query = query.or(`title.ilike.%${search}%,hook_description.ilike.%${search}%`);
   }
 
   switch (sort) {
@@ -42,102 +40,9 @@ export async function fetchGuides(sort: string = "trending", search?: string): P
   return data as unknown as Guide[];
 }
 
-interface CreateGuideInput {
-  title: string;
-  description: string;
-  techs: string[];
-  categoryId: string | null;
-  mediaFiles: MediaFile[];
-  chatMessages: ParsedMessage[];
-}
-
-export async function createGuide(input: CreateGuideInput & { userId: string }): Promise<string | null> {
-  const supabase = createClient();
-  const userId = input.userId;
-
-  // 1. Insert post
-  const { data: post, error: postError } = await supabase
-    .from("posts")
-    .insert({
-      user_id: userId,
-      title: input.title,
-      description: input.description,
-      techs: input.techs,
-      category_id: input.categoryId,
-    })
-    .select("id")
-    .single();
-
-  if (postError || !post) {
-    console.error("Failed to create guide:", postError?.message);
-    return null;
-  }
-
-  // 2. Upload media files
-  if (input.mediaFiles.length > 0) {
-    const mediaRows = [];
-
-    for (let i = 0; i < input.mediaFiles.length; i++) {
-      const media = input.mediaFiles[i];
-      const ext = media.file.name.split(".").pop();
-      const path = `${userId}/${post.id}/${i}.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("post-media")
-        .upload(path, media.file);
-
-      if (uploadError) {
-        console.error("Upload error:", uploadError.message);
-        continue;
-      }
-
-      const { data: urlData } = supabase.storage
-        .from("post-media")
-        .getPublicUrl(path);
-
-      mediaRows.push({
-        post_id: post.id,
-        url: urlData.publicUrl,
-        type: media.type,
-        order: i,
-      });
-    }
-
-    if (mediaRows.length > 0) {
-      await supabase.from("post_media").insert(mediaRows);
-    }
-  }
-
-  // 3. Save chat messages
-  if (input.chatMessages.length > 0) {
-    const chatRows = input.chatMessages.map((msg, i) => ({
-      post_id: post.id,
-      role: msg.role,
-      content: msg.content,
-      tool_action: msg.toolAction,
-      file_path: msg.filePath,
-      order: i,
-    }));
-
-    // Insert in batches of 500 (Supabase limit)
-    for (let i = 0; i < chatRows.length; i += 500) {
-      const batch = chatRows.slice(i, i + 500);
-      const { error: chatError } = await supabase
-        .from("chat_messages")
-        .insert(batch);
-
-      if (chatError) {
-        console.error("Chat insert error:", chatError.message);
-      }
-    }
-  }
-
-  return post.id;
-}
-
 interface UpdateGuideInput {
   title: string;
-  description: string;
+  hookDescription: string;
   techs: string[];
   categoryId: string | null;
 }
@@ -149,7 +54,7 @@ export async function updateGuide(guideId: string, input: UpdateGuideInput): Pro
     .from("posts")
     .update({
       title: input.title,
-      description: input.description,
+      hook_description: input.hookDescription,
       techs: input.techs,
       category_id: input.categoryId,
     })

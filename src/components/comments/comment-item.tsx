@@ -6,13 +6,14 @@ import { Heart, Reply, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn, formatRelativeTime, formatNumber } from "@/lib/utils";
+import { checkCommentLikeStatus } from "@/lib/supabase/queries/guide-detail";
 import {
-  toggleCommentLike,
-  checkCommentLikeStatus,
-  createComment,
-  updateComment,
-  deleteComment,
-} from "@/lib/supabase/queries/guide-detail";
+  toggleCommentLikeAction,
+  createCommentAction,
+  updateCommentAction,
+  deleteCommentAction,
+} from "@/lib/supabase/auth";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import type { Comment } from "@/types";
 
 interface CommentItemProps {
@@ -55,6 +56,7 @@ export function CommentItem({
   const [deleting, setDeleting] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const { t } = useTranslation();
   const isOwner = !!userId && userId === comment.user_id;
 
   // Close menu on outside click
@@ -86,14 +88,14 @@ export function CommentItem({
     const wasLiked = await ensureLikeStatus();
     setLiked(!wasLiked);
     setLikesCount((c) => (wasLiked ? c - 1 : c + 1));
-    await toggleCommentLike(comment.id, userId, wasLiked);
+    await toggleCommentLikeAction(comment.id, userId, wasLiked);
   }
 
   async function handleReplySubmit() {
     if (!userId || !replyContent.trim()) return;
     setSubmitting(true);
 
-    const newComment = await createComment(
+    const newComment = await createCommentAction(
       postId,
       userId,
       replyContent.trim(),
@@ -117,7 +119,7 @@ export function CommentItem({
       return;
     }
     setSaving(true);
-    const ok = await updateComment(comment.id, trimmed);
+    const ok = await updateCommentAction(comment.id, trimmed);
     if (ok) {
       onCommentUpdated?.(comment.id, trimmed);
       setEditing(false);
@@ -127,7 +129,7 @@ export function CommentItem({
 
   async function handleDelete() {
     setDeleting(true);
-    const ok = await deleteComment(comment.id);
+    const ok = await deleteCommentAction(comment.id);
     if (ok) {
       onCommentDeleted?.(comment.id);
     }
@@ -175,7 +177,7 @@ export function CommentItem({
                       className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-foreground hover:bg-muted transition-colors"
                     >
                       <Pencil size={12} />
-                      Edit
+                      {t("common.edit")}
                     </button>
                     <button
                       onClick={() => {
@@ -185,7 +187,7 @@ export function CommentItem({
                       className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-red-500 hover:bg-muted transition-colors"
                     >
                       <Trash2 size={12} />
-                      Delete
+                      {t("common.delete")}
                     </button>
                   </div>
                 )}
@@ -211,14 +213,14 @@ export function CommentItem({
                   disabled={saving}
                   className="rounded-full px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   onClick={handleSaveEdit}
                   disabled={!editContent.trim() || saving}
                   className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground disabled:opacity-50"
                 >
-                  {saving ? "Saving..." : "Save"}
+                  {saving ? t("common.saving") : t("common.save")}
                 </button>
               </div>
             </div>
@@ -247,7 +249,7 @@ export function CommentItem({
                   className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Reply size={13} />
-                  Reply
+                  {t("common.reply")}
                 </button>
               )}
             </div>
@@ -266,7 +268,7 @@ export function CommentItem({
                 <textarea
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
-                  placeholder="Write a reply..."
+                  placeholder={t("comments.writeReply")}
                   rows={2}
                   className="w-full resize-none rounded-lg bg-muted px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-accent/30 transition-shadow"
                 />
@@ -275,14 +277,14 @@ export function CommentItem({
                     onClick={() => setShowReply(false)}
                     className="rounded-full px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </button>
                   <button
                     onClick={handleReplySubmit}
                     disabled={!replyContent.trim() || submitting}
                     className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground disabled:opacity-50"
                   >
-                    Reply
+                    {t("common.reply")}
                   </button>
                 </div>
               </div>
@@ -315,8 +317,8 @@ export function CommentItem({
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
         onConfirm={handleDelete}
-        title="Delete comment"
-        message="Are you sure you want to delete this comment? This action cannot be undone."
+        title={t("comments.deleteComment")}
+        message={t("comments.deleteCommentConfirm")}
         loading={deleting}
       />
     </div>

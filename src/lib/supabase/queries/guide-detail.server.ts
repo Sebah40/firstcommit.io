@@ -5,42 +5,29 @@ export async function fetchGuideByIdServer(
   supabase: SupabaseClient,
   guideId: string
 ): Promise<GuideDetail | null> {
-  const { data, error } = await supabase
+  const { data, error } = (await supabase
     .from("posts")
     .select(`
       *,
       profile:profiles!posts_user_id_fkey(*),
       category:categories!posts_category_id_fkey(*),
       media:post_media(*),
-      chat_messages(*, annotation:message_annotations(*), star:message_stars(*)),
-      timeline_chapters(*)
+      stages:post_stages(*)
     `)
     .eq("id", guideId)
     .eq("is_hidden", false)
-    .single();
+    .single()) as { data: any; error: any };
 
   if (error || !data) return null;
 
-  // Sort media and chat_messages by order
   if (data.media) {
-    (data.media as any[]).sort((a: any, b: any) => a.order - b.order);
+    data.media.sort((a: any, b: any) => a.order - b.order);
   }
-  if (data.chat_messages) {
-    (data.chat_messages as any[]).sort((a: any, b: any) => a.order - b.order);
-    // Map joined annotation (array→single) and star (presence→boolean)
-    for (const msg of data.chat_messages as any[]) {
-      const annArr = msg.annotation;
-      msg.annotation = Array.isArray(annArr) && annArr.length > 0 ? annArr[0] : undefined;
-      const starArr = msg.star;
-      msg.is_starred = Array.isArray(starArr) ? starArr.length > 0 : !!starArr;
-      delete msg.star;
-    }
-  }
-  if (data.timeline_chapters) {
-    (data.timeline_chapters as any[]).sort((a: any, b: any) => a.start_order - b.start_order);
+  if (data.stages) {
+    data.stages.sort((a: any, b: any) => a.stage_order - b.stage_order);
   }
 
-  return data as unknown as GuideDetail;
+  return data as GuideDetail;
 }
 
 export async function fetchGuideCommentsServer(

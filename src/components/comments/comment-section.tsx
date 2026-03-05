@@ -4,8 +4,10 @@ import { useState, useCallback } from "react";
 import { MessageCircle } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { CommentItem } from "./comment-item";
-import { createComment, buildCommentTree } from "@/lib/supabase/queries/guide-detail";
+import { buildCommentTree } from "@/lib/supabase/queries/guide-detail";
+import { createCommentAction } from "@/lib/supabase/auth";
 import { formatNumber } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import type { Comment } from "@/types";
 
 interface CommentSectionProps {
@@ -23,6 +25,7 @@ export function CommentSection({
   userUsername,
   userAvatarUrl,
 }: CommentSectionProps) {
+  const { t } = useTranslation();
   const [flatComments, setFlatComments] = useState(initialComments);
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -33,7 +36,7 @@ export function CommentSection({
     if (!userId || !content.trim()) return;
     setSubmitting(true);
 
-    const newComment = await createComment(postId, userId, content.trim());
+    const newComment = await createCommentAction(postId, userId, content.trim());
 
     if (newComment) {
       setFlatComments((prev) => [...prev, newComment]);
@@ -61,7 +64,7 @@ export function CommentSection({
       {/* Header */}
       <div className="mb-4 flex items-center gap-2">
         <MessageCircle size={18} className="text-muted-foreground" />
-        <h2 className="text-lg font-semibold text-foreground">Comments</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t("comments.title")}</h2>
         {flatComments.length > 0 && (
           <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
             {formatNumber(flatComments.length)}
@@ -82,7 +85,7 @@ export function CommentSection({
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Add a comment..."
+              placeholder={t("comments.addComment")}
               rows={3}
               className="w-full resize-none rounded-lg bg-muted px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-accent/30 transition-shadow"
             />
@@ -92,7 +95,7 @@ export function CommentSection({
                 disabled={!content.trim() || submitting}
                 className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
               >
-                Comment
+                {t("comments.comment")}
               </button>
             </div>
           </div>
@@ -105,7 +108,7 @@ export function CommentSection({
           <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
             <MessageCircle size={24} className="text-muted-foreground" />
           </div>
-          <p className="text-sm text-muted-foreground">No comments yet</p>
+          <p className="text-sm text-muted-foreground">{t("comments.noComments")}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">

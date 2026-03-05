@@ -5,6 +5,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { formatNumber, formatJoinDate } from "@/lib/utils";
 import { updateProfile } from "@/lib/supabase/queries/profile";
 import { Star, Calendar, Pencil, X, Check, Github, Linkedin } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import type { Profile } from "@/types";
 
 interface ProfileHeaderProps {
@@ -14,6 +15,7 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ profile, isOwner, onProfileUpdate }: ProfileHeaderProps) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [displayName, setDisplayName] = useState(profile.display_name ?? "");
@@ -72,13 +74,13 @@ export function ProfileHeader({ profile, isOwner, onProfileUpdate }: ProfileHead
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Display name"
+                placeholder={t("profile.displayName")}
                 className="rounded-lg bg-muted px-3 py-1.5 text-lg font-bold text-foreground outline-none placeholder:text-muted-foreground"
               />
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                placeholder="Write a short bio..."
+                placeholder={t("profile.bioPlaceholder")}
                 rows={2}
                 className="resize-none rounded-lg bg-muted px-3 py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground"
               />
@@ -87,14 +89,14 @@ export function ProfileHeader({ profile, isOwner, onProfileUpdate }: ProfileHead
                   type="url"
                   value={githubUrl}
                   onChange={(e) => setGithubUrl(e.target.value)}
-                  placeholder="GitHub URL (e.g. https://github.com/user)"
+                  placeholder={t("profile.githubPlaceholder")}
                   className="rounded-lg bg-muted px-3 py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground"
                 />
                 <input
                   type="url"
                   value={linkedinUrl}
                   onChange={(e) => setLinkedinUrl(e.target.value)}
-                  placeholder="LinkedIn URL (e.g. https://linkedin.com/in/user)"
+                  placeholder={t("profile.linkedinPlaceholder")}
                   className="rounded-lg bg-muted px-3 py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground"
                 />
               </div>
@@ -106,7 +108,7 @@ export function ProfileHeader({ profile, isOwner, onProfileUpdate }: ProfileHead
                     onChange={(e) => setShowLikes(e.target.checked)}
                     className="accent-accent"
                   />
-                  Show liked posts on profile
+                  {t("profile.showLiked")}
                 </label>
                 <label className="flex items-center gap-2 text-muted-foreground">
                   <input
@@ -115,7 +117,7 @@ export function ProfileHeader({ profile, isOwner, onProfileUpdate }: ProfileHead
                     onChange={(e) => setShowSaves(e.target.checked)}
                     className="accent-accent"
                   />
-                  Show saved posts on profile
+                  {t("profile.showSaved")}
                 </label>
               </div>
               <div className="flex items-center gap-2">
@@ -125,14 +127,14 @@ export function ProfileHeader({ profile, isOwner, onProfileUpdate }: ProfileHead
                   className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
                   <Check size={14} />
-                  {saving ? "Saving..." : "Save"}
+                  {saving ? t("common.saving") : t("common.save")}
                 </button>
                 <button
                   onClick={cancelEditing}
                   className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
                   <X size={14} />
-                  Cancel
+                  {t("common.cancel")}
                 </button>
               </div>
             </div>
@@ -148,7 +150,7 @@ export function ProfileHeader({ profile, isOwner, onProfileUpdate }: ProfileHead
                     className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                   >
                     <Pencil size={12} />
-                    Edit Profile
+                    {t("profile.editProfile")}
                   </button>
                 )}
               </div>
@@ -159,7 +161,7 @@ export function ProfileHeader({ profile, isOwner, onProfileUpdate }: ProfileHead
               <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Star size={12} />
-                  {formatNumber(profile.karma)} karma
+                  {formatNumber(profile.karma)} {t("common.karma")}
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar size={12} />

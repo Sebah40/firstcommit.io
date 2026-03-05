@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { ImagePlus, X, Film } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/use-translation";
 
 export interface MediaFile {
   file: File;
@@ -17,6 +18,7 @@ interface MediaUploadProps {
 }
 
 export function MediaUpload({ files, onChange, max = 6 }: MediaUploadProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
 
   function handleFiles(fileList: FileList | null) {
@@ -88,7 +90,7 @@ export function MediaUpload({ files, onChange, max = 6 }: MediaUploadProps) {
             )}
           >
             <ImagePlus size={20} />
-            <span className="text-xs">Add media</span>
+            <span className="text-xs">{t("media.addMedia")}</span>
           </button>
         )}
       </div>

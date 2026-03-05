@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { fetchGuidesServer } from "@/lib/supabase/queries/guides.server";
 import { GuideGrid } from "@/components/gallery/guide-grid";
+import { HomeHeader } from "@/components/gallery/home-header";
 import { SortTabsServer } from "@/components/gallery/sort-tabs-server";
 import type { SortOption } from "@/types";
 
@@ -19,16 +20,7 @@ export default async function Home({ searchParams }: HomeProps) {
     <div>
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            {query ? `Results for "${query}"` : "Explore"}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {query
-              ? `${guides.length} guide${guides.length !== 1 ? "s" : ""} found`
-              : "Step-by-step guides for building with AI"}
-          </p>
-        </div>
+        <HomeHeader query={query} count={guides.length} />
         <SortTabsServer active={validSort as SortOption} query={query} />
       </div>
 

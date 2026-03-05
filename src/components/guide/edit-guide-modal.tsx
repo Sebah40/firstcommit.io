@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { TagInput } from "@/components/create/tag-input";
 import { CategorySelect } from "@/components/create/category-select";
-import { updateGuide } from "@/lib/supabase/queries/guides";
+import { updateGuideAction } from "@/lib/supabase/auth";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import type { GuideDetail } from "@/types";
 
 interface EditGuideModalProps {
@@ -15,17 +16,17 @@ interface EditGuideModalProps {
 }
 
 export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModalProps) {
+  const { t } = useTranslation();
   const overlayRef = useRef<HTMLDivElement>(null);
   const [title, setTitle] = useState(guide.title);
-  const [description, setDescription] = useState(guide.description);
+  const [hookDescription, setHookDescription] = useState(guide.hook_description);
   const [techs, setTechs] = useState<string[]>(guide.techs);
   const [categoryId, setCategoryId] = useState<string | null>(guide.category_id);
   const [saving, setSaving] = useState(false);
 
-  // Reset form when guide changes
   useEffect(() => {
     setTitle(guide.title);
-    setDescription(guide.description);
+    setHookDescription(guide.hook_description);
     setTechs(guide.techs);
     setCategoryId(guide.category_id);
   }, [guide]);
@@ -45,9 +46,9 @@ export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModal
     if (!title.trim()) return;
     setSaving(true);
 
-    const updated = await updateGuide(guide.id, {
+    const updated = await updateGuideAction(guide.id, {
       title: title.trim(),
-      description: description.trim(),
+      hookDescription: hookDescription.trim(),
       techs,
       categoryId,
     });
@@ -56,7 +57,7 @@ export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModal
       onSaved({
         ...guide,
         title: updated.title,
-        description: updated.description,
+        hook_description: updated.hook_description,
         techs: updated.techs,
         category_id: updated.category_id,
         category: updated.category,
@@ -74,7 +75,7 @@ export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModal
     >
       <div className="w-full max-w-lg rounded-2xl bg-surface p-6">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">Edit guide</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("guide.editGuide")}</h2>
           <button
             onClick={onClose}
             className="rounded-full p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -87,7 +88,7 @@ export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModal
           {/* Title */}
           <div>
             <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-              Title
+              {t("common.title")}
             </label>
             <input
               type="text"
@@ -97,14 +98,14 @@ export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModal
             />
           </div>
 
-          {/* Description */}
+          {/* Hook Description */}
           <div>
             <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-              Description
+              {t("common.description")}
             </label>
             <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={hookDescription}
+              onChange={(e) => setHookDescription(e.target.value)}
               rows={3}
               className="w-full resize-none rounded-lg bg-muted px-3 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-accent/30 transition-shadow"
             />
@@ -113,7 +114,7 @@ export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModal
           {/* Techs */}
           <div>
             <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-              Technologies
+              {t("common.technologies")}
             </label>
             <TagInput tags={techs} onChange={setTechs} />
           </div>
@@ -121,7 +122,7 @@ export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModal
           {/* Category */}
           <div>
             <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-              Category
+              {t("common.category")}
             </label>
             <CategorySelect value={categoryId} onChange={setCategoryId} />
           </div>
@@ -134,14 +135,14 @@ export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModal
             disabled={saving}
             className="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             onClick={handleSave}
             disabled={!title.trim() || saving}
             className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
           >
-            {saving ? "Saving..." : "Save changes"}
+            {saving ? t("common.saving") : t("guide.saveChanges")}
           </button>
         </div>
       </div>
