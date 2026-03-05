@@ -88,6 +88,15 @@ export function Navbar() {
         </button>
         <ThemeToggle />
 
+        {/* CTA — always visible */}
+        <Link
+          href="/connect"
+          className="group relative flex h-9 items-center gap-1.5 rounded-full bg-accent px-4 text-sm font-semibold text-accent-foreground shadow-[0_0_12px_rgba(99,102,241,0.4)] hover:shadow-[0_0_20px_rgba(99,102,241,0.6)] hover:scale-[1.03] transition-all duration-200"
+        >
+          <Terminal size={14} />
+          <span className="hidden sm:inline">{t("nav.connect")}</span>
+        </Link>
+
         {user ? (
           <>
             <button
@@ -97,13 +106,6 @@ export function Navbar() {
             >
               <UserPlus size={18} />
             </button>
-            <Link
-              href="/connect"
-              className="flex h-9 items-center gap-1.5 rounded-full bg-muted px-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Terminal size={14} />
-              <span className="hidden sm:inline">{t("nav.connect")}</span>
-            </Link>
 
             {/* Avatar menu */}
             <div className="relative" ref={menuRef}>

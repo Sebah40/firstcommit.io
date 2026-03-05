@@ -12,6 +12,7 @@ export interface Profile {
   show_saves: boolean;
   github_url: string | null;
   linkedin_url: string | null;
+  cv_url: string | null;
   followers_count: number;
   following_count: number;
   created_at: string;
