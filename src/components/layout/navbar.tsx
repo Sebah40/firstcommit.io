@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { Search, Plus, LogOut, User, Terminal, Languages } from "lucide-react";
+import { Search, LogOut, User, Terminal, Languages } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Avatar } from "@/components/ui/avatar";
+import { Logo } from "@/components/ui/logo";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -55,10 +56,8 @@ export function Navbar() {
     <header className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 sm:px-6 glass border-b border-border/40">
       {/* Left: Logo */}
       <Link href="/" className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500">
-          <span className="text-sm font-bold text-white">fc</span>
-        </div>
-        <span className="text-lg font-semibold text-foreground">First Commit</span>
+        <Logo className="h-8 w-8" />
+        <span className="text-lg font-semibold text-foreground hidden sm:inline">First Commit</span>
       </Link>
 
       {/* Center: Search */}
@@ -78,6 +77,13 @@ export function Navbar() {
 
       {/* Right */}
       <div className="flex items-center gap-2">
+        <button
+          onClick={() => setLangOpen(true)}
+          className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+          title={t("nav.language")}
+        >
+          <Languages size={18} />
+        </button>
         <ThemeToggle />
 
         {user ? (
@@ -88,14 +94,6 @@ export function Navbar() {
             >
               <Terminal size={14} />
               <span className="hidden sm:inline">{t("nav.connect")}</span>
-            </Link>
-
-            <Link
-              href="/create"
-              className="flex h-9 items-center gap-2 rounded-full bg-accent px-4 text-sm font-medium text-accent-foreground hover:opacity-90 transition-opacity"
-            >
-              <Plus size={16} />
-              <span className="hidden sm:inline">{t("nav.create")}</span>
             </Link>
 
             {/* Avatar menu */}
@@ -130,17 +128,6 @@ export function Navbar() {
                     <User size={15} />
                     {t("nav.profile")}
                   </Link>
-
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setLangOpen(true);
-                    }}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors"
-                  >
-                    <Languages size={15} />
-                    {t("nav.language")}
-                  </button>
                   <button
                     onClick={handleSignOut}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors"
@@ -161,6 +148,7 @@ export function Navbar() {
           </Link>
         )}
       </div>
+
       {/* Language modal */}
       {langOpen && (
         <div

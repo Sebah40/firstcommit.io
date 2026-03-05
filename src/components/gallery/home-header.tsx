@@ -13,9 +13,9 @@ export function HomeHeader({ query, count }: HomeHeaderProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
     >
       <h1 className="text-3xl font-bold tracking-tight text-foreground">
         {query ? t("gallery.resultsFor", { query }) : t("gallery.explore")}
