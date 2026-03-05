@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: "First Commit — See how it was built",
   description:
     "See how it was built. Developers share step-by-step build stories — from first commit to production — powered by AI coding sessions.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
