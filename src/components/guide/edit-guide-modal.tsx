@@ -4,24 +4,28 @@ import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { TagInput } from "@/components/create/tag-input";
 import { CategorySelect } from "@/components/create/category-select";
+import { ImageUpload } from "@/components/guide/image-upload";
 import { updateGuideAction } from "@/lib/supabase/auth";
 import { useTranslation } from "@/lib/i18n/use-translation";
-import type { GuideDetail } from "@/types";
+import type { GuideDetail, PostMedia } from "@/types";
 
 interface EditGuideModalProps {
   open: boolean;
   guide: GuideDetail;
+  userId: string;
   onClose: () => void;
   onSaved: (updated: GuideDetail) => void;
 }
 
-export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModalProps) {
+export function EditGuideModal({ open, guide, userId, onClose, onSaved }: EditGuideModalProps) {
   const { t } = useTranslation();
   const overlayRef = useRef<HTMLDivElement>(null);
   const [title, setTitle] = useState(guide.title);
   const [hookDescription, setHookDescription] = useState(guide.hook_description);
   const [techs, setTechs] = useState<string[]>(guide.techs);
   const [categoryId, setCategoryId] = useState<string | null>(guide.category_id);
+  const [instanceUrl, setInstanceUrl] = useState(guide.instance_url ?? "");
+  const [media, setMedia] = useState<PostMedia[]>(guide.media ?? []);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -29,6 +33,8 @@ export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModal
     setHookDescription(guide.hook_description);
     setTechs(guide.techs);
     setCategoryId(guide.category_id);
+    setInstanceUrl(guide.instance_url ?? "");
+    setMedia(guide.media ?? []);
   }, [guide]);
 
   useEffect(() => {
@@ -51,6 +57,7 @@ export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModal
       hookDescription: hookDescription.trim(),
       techs,
       categoryId,
+      instanceUrl: instanceUrl.trim() || null,
     });
 
     if (updated) {
@@ -61,6 +68,8 @@ export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModal
         techs: updated.techs,
         category_id: updated.category_id,
         category: updated.category,
+        instance_url: updated.instance_url,
+        media,
       });
       onClose();
     }
@@ -119,6 +128,20 @@ export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModal
             <TagInput tags={techs} onChange={setTechs} />
           </div>
 
+          {/* Instance URL */}
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              Live URL
+            </label>
+            <input
+              type="url"
+              value={instanceUrl}
+              onChange={(e) => setInstanceUrl(e.target.value)}
+              placeholder="https://myproject.com"
+              className="w-full rounded-lg bg-muted px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-accent/30 transition-shadow"
+            />
+          </div>
+
           {/* Category */}
           <div>
             <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
@@ -126,6 +149,14 @@ export function EditGuideModal({ open, guide, onClose, onSaved }: EditGuideModal
             </label>
             <CategorySelect value={categoryId} onChange={setCategoryId} />
           </div>
+
+          {/* Images */}
+          <ImageUpload
+            postId={guide.id}
+            userId={userId}
+            media={media}
+            onChange={setMedia}
+          />
         </div>
 
         {/* Actions */}

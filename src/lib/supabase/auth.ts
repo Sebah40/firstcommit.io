@@ -61,7 +61,7 @@ export async function deleteGuide(guideId: string): Promise<boolean> {
 }
 
 export async function updateGuideAction(guideId: string, input: {
-  title: string; hookDescription: string; techs: string[]; categoryId: string | null;
+  title: string; hookDescription: string; techs: string[]; categoryId: string | null; instanceUrl?: string | null;
 }) {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -71,6 +71,7 @@ export async function updateGuideAction(guideId: string, input: {
       hook_description: input.hookDescription,
       techs: input.techs,
       category_id: input.categoryId,
+      instance_url: input.instanceUrl ?? null,
     })
     .eq("id", guideId)
     .select("*,profile:profiles!posts_user_id_fkey(*),category:categories!posts_category_id_fkey(*),media:post_media(*)")
