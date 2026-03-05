@@ -206,7 +206,7 @@ The sum of all duration_messages should roughly equal the total user messages fo
         }
 
         // Warn if suspiciously few sessions were read
-        if (total_sessions_read < 3) {
+        if (total_sessions_read < 1) {
           return {
             content: [
               {
