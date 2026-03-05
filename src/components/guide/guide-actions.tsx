@@ -184,6 +184,7 @@ export function GuideActions({
         <EditGuideModal
           open={editOpen}
           guide={guide}
+          userId={userId!}
           onClose={() => setEditOpen(false)}
           onSaved={(updated) => onGuideUpdated?.(updated)}
         />
