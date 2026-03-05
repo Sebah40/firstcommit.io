@@ -90,7 +90,7 @@ export async function fetchUserSavedGuides(userId: string): Promise<Guide[]> {
 
 export async function updateProfile(
   userId: string,
-  updates: Partial<Pick<Profile, "display_name" | "bio" | "show_likes" | "show_saves" | "github_url" | "linkedin_url">>
+  updates: Partial<Pick<Profile, "display_name" | "bio" | "show_likes" | "show_saves" | "github_url" | "linkedin_url" | "avatar_url" | "cv_url">>
 ): Promise<Profile | null> {
   const supabase = createClient();
 
