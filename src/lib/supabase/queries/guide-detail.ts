@@ -1,45 +1,32 @@
 import { createClient } from "@/lib/supabase/client";
-import type { GuideDetail, Comment, TimelineChapter } from "@/types";
+import type { GuideDetail, Comment } from "@/types";
 
 export async function fetchGuideById(guideId: string): Promise<GuideDetail | null> {
   const supabase = createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = (await supabase
     .from("posts")
     .select(`
       *,
       profile:profiles!posts_user_id_fkey(*),
       category:categories!posts_category_id_fkey(*),
       media:post_media(*),
-      chat_messages(*, annotation:message_annotations(*), star:message_stars(*)),
-      timeline_chapters(*)
+      stages:post_stages(*)
     `)
     .eq("id", guideId)
     .eq("is_hidden", false)
-    .single();
+    .single()) as { data: any; error: any };
 
   if (error || !data) return null;
 
-  // Sort media and chat_messages by order
   if (data.media) {
-    (data.media as any[]).sort((a: any, b: any) => a.order - b.order);
+    data.media.sort((a: any, b: any) => a.order - b.order);
   }
-  if (data.chat_messages) {
-    (data.chat_messages as any[]).sort((a: any, b: any) => a.order - b.order);
-    // Map joined annotation (array→single) and star (presence→boolean)
-    for (const msg of data.chat_messages as any[]) {
-      const annArr = msg.annotation;
-      msg.annotation = Array.isArray(annArr) && annArr.length > 0 ? annArr[0] : undefined;
-      const starArr = msg.star;
-      msg.is_starred = Array.isArray(starArr) ? starArr.length > 0 : !!starArr;
-      delete msg.star;
-    }
-  }
-  if (data.timeline_chapters) {
-    (data.timeline_chapters as any[]).sort((a: any, b: any) => a.start_order - b.start_order);
+  if (data.stages) {
+    data.stages.sort((a: any, b: any) => a.stage_order - b.stage_order);
   }
 
-  return data as unknown as GuideDetail;
+  return data as GuideDetail;
 }
 
 export async function fetchGuideTitle(guideId: string): Promise<string | null> {
@@ -271,83 +258,3 @@ export async function toggleCommentLike(commentId: string, userId: string, liked
   }
 }
 
-// ============================================
-// Timeline Features — Annotations, Stars, Chapters
-// ============================================
-
-export async function upsertAnnotation(messageId: string, postId: string, content: string) {
-  const supabase = createClient();
-
-  const { error } = await supabase
-    .from("message_annotations")
-    .upsert(
-      { message_id: messageId, post_id: postId, content },
-      { onConflict: "message_id" }
-    );
-
-  return !error;
-}
-
-export async function deleteAnnotation(messageId: string) {
-  const supabase = createClient();
-
-  const { error } = await supabase
-    .from("message_annotations")
-    .delete()
-    .eq("message_id", messageId);
-
-  return !error;
-}
-
-export async function toggleStar(messageId: string, postId: string, isStarred: boolean) {
-  const supabase = createClient();
-
-  if (isStarred) {
-    await supabase.from("message_stars").delete().eq("message_id", messageId);
-  } else {
-    await supabase.from("message_stars").insert({ message_id: messageId, post_id: postId });
-  }
-}
-
-export async function createChapter(
-  postId: string,
-  title: string,
-  startOrder: number,
-  endOrder: number
-): Promise<TimelineChapter | null> {
-  const supabase = createClient();
-
-  const { data, error } = await supabase
-    .from("timeline_chapters")
-    .insert({ post_id: postId, title, start_order: startOrder, end_order: endOrder })
-    .select()
-    .single();
-
-  if (error) return null;
-  return data as unknown as TimelineChapter;
-}
-
-export async function updateChapter(
-  chapterId: string,
-  updates: { title?: string; start_order?: number; end_order?: number }
-): Promise<boolean> {
-  const supabase = createClient();
-
-  const { error } = await supabase
-    .from("timeline_chapters")
-    .update(updates)
-    .eq("id", chapterId);
-
-  return !error;
-}
-
-export async function deleteChapter(chapterId: string): Promise<boolean> {
-  const supabase = createClient();
-
-  const { error } = await supabase
-    .from("timeline_chapters")
-    .delete()
-    .eq("id", chapterId);
-
-  return !error;
-}

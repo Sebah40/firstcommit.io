@@ -6,7 +6,8 @@ import Link from "next/link";
 import { Calendar, Github, Linkedin } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { cn, formatNumber, formatJoinDate } from "@/lib/utils";
-import { toggleFollow } from "@/lib/supabase/queries/guide-detail";
+import { toggleFollowAction } from "@/lib/supabase/auth";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import type { Profile } from "@/types";
 
 interface AuthorCardProps {
@@ -17,6 +18,7 @@ interface AuthorCardProps {
 
 export function AuthorCard({ author, currentUserId, initialFollowing }: AuthorCardProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [following, setFollowing] = useState(initialFollowing);
   const [followersCount, setFollowersCount] = useState(author.followers_count);
 
@@ -30,11 +32,11 @@ export function AuthorCard({ author, currentUserId, initialFollowing }: AuthorCa
     const wasFollowing = following;
     setFollowing(!wasFollowing);
     setFollowersCount((c) => (wasFollowing ? c - 1 : c + 1));
-    await toggleFollow(currentUserId, author.id, wasFollowing);
+    await toggleFollowAction(currentUserId, author.id, wasFollowing);
   }
 
   return (
-    <div className="rounded-xl bg-surface p-5">
+    <div className="rounded-xl glass-card p-5 group">
       <div className="flex items-start gap-3">
         <Link href={`/profile/${author.username}`}>
           <Avatar
@@ -47,7 +49,7 @@ export function AuthorCard({ author, currentUserId, initialFollowing }: AuthorCa
         <div className="min-w-0 flex-1">
           <Link
             href={`/profile/${author.username}`}
-            className="block text-sm font-semibold text-foreground hover:underline"
+            className="block text-sm font-semibold text-foreground group-hover:text-accent transition-colors"
           >
             {author.display_name || author.username}
           </Link>
@@ -65,8 +67,8 @@ export function AuthorCard({ author, currentUserId, initialFollowing }: AuthorCa
       )}
 
       <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
-        <span>{formatNumber(followersCount)} followers</span>
-        <span>{formatNumber(author.karma)} karma</span>
+        <span>{formatNumber(followersCount)} {t("common.followers")}</span>
+        <span>{formatNumber(author.karma)} {t("common.karma")}</span>
         <span className="flex items-center gap-1">
           <Calendar size={12} />
           {formatJoinDate(author.created_at)}
@@ -110,7 +112,7 @@ export function AuthorCard({ author, currentUserId, initialFollowing }: AuthorCa
               : "bg-accent text-accent-foreground hover:opacity-90"
           )}
         >
-          {following ? "Following" : "Follow"}
+          {following ? t("profile.following") : t("profile.follow")}
         </button>
       )}
     </div>

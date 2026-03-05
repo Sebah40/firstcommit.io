@@ -1,0 +1,204 @@
+import type { TranslationKey } from "./en";
+
+const es: Record<TranslationKey, string> = {
+  // ── Common ──
+  "common.back": "Volver",
+  "common.cancel": "Cancelar",
+  "common.save": "Guardar",
+  "common.saving": "Guardando...",
+  "common.delete": "Eliminar",
+  "common.deleting": "Eliminando...",
+  "common.edit": "Editar",
+  "common.signIn": "Iniciar sesión",
+  "common.you": "Tú",
+  "common.claude": "Claude",
+  "common.messages": "mensajes",
+  "common.files": "archivos",
+  "common.copied": "¡Copiado!",
+  "common.email": "Correo electrónico",
+  "common.password": "Contraseña",
+  "common.title": "Título",
+  "common.description": "Descripción",
+  "common.category": "Categoría",
+  "common.technologies": "Tecnologías",
+  "common.followers": "seguidores",
+  "common.karma": "karma",
+  "common.reply": "Responder",
+  "common.share": "Compartir",
+  "common.publish": "Publicar",
+  "common.latest": "último",
+
+  // ── Nav ──
+  "nav.searchPlaceholder": "Buscar guías...",
+  "nav.connect": "Conectar",
+  "nav.create": "Crear",
+  "nav.profile": "Perfil",
+  "nav.signOut": "Cerrar sesión",
+  "nav.language": "Idioma",
+
+  // ── Sidebar ──
+  "sidebar.home": "Inicio",
+  "sidebar.trending": "Tendencias",
+  "sidebar.recent": "Recientes",
+  "sidebar.saved": "Guardados",
+  "sidebar.categories": "Categorías",
+
+  // ── Categories ──
+  "category.webApps": "Apps Web",
+  "category.mobileApps": "Apps Móviles",
+  "category.apisBackend": "APIs y Backend",
+  "category.cliTools": "Herramientas CLI",
+  "category.aiMl": "IA / ML",
+  "category.games": "Juegos",
+  "category.automation": "Automatización",
+  "category.designUi": "Diseño y UI",
+
+  // ── Auth: Login ──
+  "auth.welcomeBack": "Bienvenido de nuevo",
+  "auth.signInToAccount": "Inicia sesión en tu cuenta",
+  "auth.signingIn": "Iniciando sesión...",
+  "auth.noAccount": "¿No tienes cuenta?",
+  "auth.signUp": "Regístrate",
+
+  // ── Auth: Register ──
+  "auth.createAccount": "Crear cuenta",
+  "auth.joinPathway": "Únete a First Commit y comparte lo que construyes",
+  "auth.username": "Nombre de usuario",
+  "auth.passwordMin": "Contraseña (mín. 6 caracteres)",
+  "auth.creatingAccount": "Creando cuenta...",
+  "auth.hasAccount": "¿Ya tienes cuenta?",
+  "auth.usernameMinLength": "El nombre de usuario debe tener al menos 3 caracteres",
+  "auth.usernameChars": "El nombre de usuario solo puede contener letras, números y guiones bajos",
+
+  // ── Auth: Authorize ──
+  "auth.invalidRequest": "Solicitud de autorización inválida",
+  "auth.invalidRequestDesc": "Esta página se abre automáticamente desde Claude Code durante la configuración.",
+  "auth.connected": "¡Conectado!",
+  "auth.connectedDesc": "Claude Code ahora está conectado a First Commit. Puedes cerrar esta pestaña.",
+  "auth.connectClaudeCode": "Conectar Claude Code",
+  "auth.authorizeDesc": "Autoriza a Claude Code para publicar conversaciones en First Commit",
+  "auth.signedInAs": "Conectado como",
+  "auth.connecting": "Conectando...",
+  "auth.authorizeClaudeCode": "Autorizar Claude Code",
+  "auth.signInAuthorize": "Iniciar sesión y autorizar",
+  "auth.sessionNotFound": "Sesión no encontrada. Por favor, inicia sesión primero.",
+  "auth.somethingWrong": "Algo salió mal. Inténtalo de nuevo.",
+
+  // ── Create ──
+  "create.signInToShare": "Inicia sesión para compartir",
+  "create.needAccount": "Necesitas una cuenta para compartir conversaciones",
+  "create.shareConversation": "Comparte tu conversación",
+  "create.uploadDesc": "Sube una conversación de Claude Code para mostrar cómo construiste algo",
+  "create.publishing": "Publicando tu conversación...",
+  "create.redirecting": "Redirigiendo...",
+
+  // ── Review Form ──
+  "review.reviewPublish": "Revisar y publicar",
+  "review.messagesCount": "{count} mensajes",
+  "review.filesChanged": "{count} archivos modificados",
+  "review.tools": "Herramientas:",
+  "review.whatDidYouBuild": "¿Qué construiste?",
+  "review.briefDescription": "Breve descripción de lo que logra esta conversación...",
+  "review.difficulty": "Dificultad",
+  "review.beginner": "principiante",
+  "review.intermediate": "intermedio",
+  "review.advanced": "avanzado",
+  "review.keyMoments": "Momentos clave ({count} seleccionados)",
+  "review.selectHighlights": "Selecciona los mensajes más interesantes para destacar",
+  "review.screenshots": "Capturas de pantalla (opcional)",
+
+  // ── Chat Picker ──
+  "picker.scanning": "Escaneando conversaciones...",
+  "picker.dropIt": "¡Suéltalo!",
+  "picker.dropzone": "Arrastra tu carpeta de proyectos o un archivo .jsonl",
+  "picker.orPickFile": "o elige un archivo .jsonl",
+  "picker.finderHint": "Finder:",
+  "picker.pasteHint": "pegar ruta",
+  "picker.dragHint": "arrastra la carpeta aquí",
+  "picker.conversationsIn": "{conversations} conversaciones en {projects} {projectWord}",
+  "picker.project": "proyecto",
+  "picker.projects": "proyectos",
+  "picker.chat": "chat",
+  "picker.chats": "chats",
+  "picker.clearAll": "Limpiar todo",
+  "picker.user": "usuario",
+  "picker.assistant": "asistente",
+  "picker.emptyFile": "Este archivo está vacío o no se pudo analizar.",
+  "picker.readFailed": "No se pudo leer el archivo de conversación.",
+  "picker.noConversations": "No se encontraron conversaciones. Arrastra la carpeta ~/.claude/projects/ o un archivo .jsonl.",
+
+  // ── Connect ──
+  "connect.title": "Publica desde Claude Code",
+  "connect.subtitle": "Comparte cómo lo construiste — directo desde tu terminal",
+  "connect.howItWorks": "Cómo funciona",
+  "connect.step1Title": "Agrega el servidor MCP",
+  "connect.step1Desc": "Ejecuta el comando en cualquier proyecto donde uses Claude Code. Registra el servidor de First Commit.",
+  "connect.step2Title": "Autoriza",
+  "connect.step2Desc": "Tu navegador se abre automáticamente. Inicia sesión o crea una cuenta para conectar Claude Code.",
+  "connect.step3Title": "Publica tu historia",
+  "connect.step3Desc": "Cuando estés listo, dile a Claude: \"publica este proyecto en First Commit\". Lee todo tu historial de conversación y crea una historia detallada — etapas, decisiones, problemas resueltos.",
+  "connect.examplePrompt": "\"Publica este proyecto en First Commit\"",
+  "connect.exampleDesc": "Eso es todo. Claude lee todos tus archivos de sesión, identifica las etapas clave y publica un post detallado \"Cómo se construyó\" con tu stack, narrativa y timeline.",
+  "connect.browseGuides": "Explorar guías publicadas",
+  "connect.availableTools": "Herramientas disponibles",
+  "connect.toolPublish": "Publica una historia \"Cómo se construyó\" desde tu historial completo de conversación",
+  "connect.toolSearch": "Busca historias publicadas en First Commit",
+
+  // ── Guide Detail ──
+  "guide.deleteGuide": "Eliminar guía",
+  "guide.deleteGuideConfirm": "¿Estás seguro de que quieres eliminar esta guía? Esta acción no se puede deshacer.",
+  "guide.editGuide": "Editar guía",
+  "guide.saveChanges": "Guardar cambios",
+  "guide.moreLikeThis": "Más como esto",
+
+  // ── Timeline ──
+  "timeline.howItWasBuilt": "Cómo se construyó",
+
+  // ── Comments ──
+  "comments.title": "Comentarios",
+  "comments.addComment": "Añade un comentario...",
+  "comments.comment": "Comentar",
+  "comments.noComments": "Aún no hay comentarios",
+  "comments.writeReply": "Escribe una respuesta...",
+  "comments.deleteComment": "Eliminar comentario",
+  "comments.deleteCommentConfirm": "¿Estás seguro de que quieres eliminar este comentario? Esta acción no se puede deshacer.",
+  "comments.onGuides": "Los comentarios en guías aparecerán aquí.",
+
+  // ── Profile ──
+  "profile.editProfile": "Editar perfil",
+  "profile.displayName": "Nombre visible",
+  "profile.bioPlaceholder": "Escribe una bio corta...",
+  "profile.githubPlaceholder": "URL de GitHub (ej. https://github.com/usuario)",
+  "profile.linkedinPlaceholder": "URL de LinkedIn (ej. https://linkedin.com/in/usuario)",
+  "profile.showLiked": "Mostrar publicaciones con me gusta en el perfil",
+  "profile.showSaved": "Mostrar publicaciones guardadas en el perfil",
+  "profile.guides": "Guías",
+  "profile.comments": "Comentarios",
+  "profile.liked": "Me gusta",
+  "profile.saved": "Guardados",
+  "profile.follow": "Seguir",
+  "profile.following": "Siguiendo",
+
+  // ── Gallery / Sort ──
+  "gallery.trending": "Tendencias",
+  "gallery.recent": "Recientes",
+  "gallery.popular": "Populares",
+  "gallery.noGuides": "Aún no hay guías",
+  "gallery.noGuidesDesc": "Sé el primero en compartir una guía sobre cómo construir con IA. Tu aventura de vibecoding empieza aquí.",
+  "gallery.explore": "Explorar",
+  "gallery.resultsFor": "Resultados para \"{query}\"",
+  "gallery.guidesFound": "{count} guía{plural} encontrada{plural}",
+  "gallery.subtitle": "Guías paso a paso para construir con IA",
+
+  // ── Media ──
+  "media.addMedia": "Añadir media",
+
+  // ── Not Found ──
+  "notFound.guide": "Guía no encontrada",
+  "notFound.guideDesc": "Esta guía pudo haber sido eliminada o no existe.",
+  "notFound.goHome": "Ir al inicio",
+  "notFound.user": "Usuario no encontrado",
+  "notFound.userDesc": "El perfil que buscas no existe.",
+};
+
+export default es;

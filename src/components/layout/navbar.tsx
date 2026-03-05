@@ -3,15 +3,21 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { Search, Plus, LogOut, User } from "lucide-react";
+import { Search, Plus, LogOut, User, Terminal, Languages } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Avatar } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/use-translation";
+import { LOCALES } from "@/lib/i18n";
 
 export function Navbar() {
   const { user, profile, loading } = useAuth();
+  const { t, locale, setLocale } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -46,25 +52,25 @@ export function Navbar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 sm:px-6 bg-surface">
+    <header className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 sm:px-6 glass border-b border-border/40">
       {/* Left: Logo */}
       <Link href="/" className="flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500">
-          <span className="text-sm font-bold text-white">P</span>
+          <span className="text-sm font-bold text-white">fc</span>
         </div>
-        <span className="text-lg font-semibold text-foreground">Pathway</span>
+        <span className="text-lg font-semibold text-foreground">First Commit</span>
       </Link>
 
       {/* Center: Search */}
       <form onSubmit={handleSearch} className="hidden max-w-md flex-1 px-8 md:block">
-        <div className="flex items-center gap-2 rounded-full bg-muted px-4 py-2 focus-within:ring-2 focus-within:ring-accent/30 transition-shadow">
+        <div className="flex items-center gap-2 rounded-full bg-muted/50 px-4 py-2 focus-within:ring-2 focus-within:ring-accent/30 transition-shadow">
           <Search size={16} className="text-muted-foreground" />
           <input
             name="search"
             type="text"
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            placeholder="Search guides..."
+            placeholder={t("nav.searchPlaceholder")}
             className="w-full bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground"
           />
         </div>
@@ -77,11 +83,19 @@ export function Navbar() {
         {user ? (
           <>
             <Link
+              href="/connect"
+              className="flex h-9 items-center gap-1.5 rounded-full bg-muted px-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Terminal size={14} />
+              <span className="hidden sm:inline">{t("nav.connect")}</span>
+            </Link>
+
+            <Link
               href="/create"
               className="flex h-9 items-center gap-2 rounded-full bg-accent px-4 text-sm font-medium text-accent-foreground hover:opacity-90 transition-opacity"
             >
               <Plus size={16} />
-              <span className="hidden sm:inline">Create</span>
+              <span className="hidden sm:inline">{t("nav.create")}</span>
             </Link>
 
             {/* Avatar menu */}
@@ -114,14 +128,25 @@ export function Navbar() {
                     className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors"
                   >
                     <User size={15} />
-                    Profile
+                    {t("nav.profile")}
                   </Link>
+
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setLangOpen(true);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors"
+                  >
+                    <Languages size={15} />
+                    {t("nav.language")}
+                  </button>
                   <button
                     onClick={handleSignOut}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors"
                   >
                     <LogOut size={15} />
-                    Sign out
+                    {t("nav.signOut")}
                   </button>
                 </div>
               )}
@@ -132,10 +157,44 @@ export function Navbar() {
             href="/login"
             className="flex h-9 items-center rounded-full bg-accent px-4 text-sm font-medium text-accent-foreground hover:opacity-90 transition-opacity"
           >
-            Sign in
+            {t("common.signIn")}
           </Link>
         )}
       </div>
+      {/* Language modal */}
+      {langOpen && (
+        <div
+          ref={langRef}
+          onClick={(e) => e.target === langRef.current && setLangOpen(false)}
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4"
+        >
+          <div className="w-full max-w-xs rounded-2xl bg-surface p-5">
+            <h3 className="mb-4 text-lg font-semibold text-foreground">{t("nav.language")}</h3>
+            <div className="flex flex-col gap-1">
+              {LOCALES.map((loc) => (
+                <button
+                  key={loc.value}
+                  onClick={() => {
+                    setLocale(loc.value);
+                    setLangOpen(false);
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                    locale === loc.value
+                      ? "bg-accent/10 text-accent"
+                      : "text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+                  )}
+                >
+                  {loc.label}
+                  {locale === loc.value && (
+                    <span className="ml-auto text-accent">&#10003;</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

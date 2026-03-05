@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { formatRelativeTime, formatNumber, guideDetailPath } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import type { Comment } from "@/types";
 
 interface CommentListProps {
@@ -10,6 +11,8 @@ interface CommentListProps {
 }
 
 export function CommentList({ comments }: CommentListProps) {
+  const { t } = useTranslation();
+
   if (comments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -17,10 +20,10 @@ export function CommentList({ comments }: CommentListProps) {
           <span className="text-3xl">💬</span>
         </div>
         <h3 className="mb-2 text-lg font-semibold text-foreground">
-          No comments yet
+          {t("comments.noComments")}
         </h3>
         <p className="max-w-sm text-sm text-muted-foreground">
-          Comments on guides will appear here.
+          {t("comments.onGuides")}
         </p>
       </div>
     );

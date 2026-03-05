@@ -1,11 +1,17 @@
+"use client";
+
 import { GuideCard } from "./guide-card";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import type { Guide } from "@/types";
+import { motion } from "framer-motion";
 
 interface GuideGridProps {
   guides: Guide[];
 }
 
 export function GuideGrid({ guides }: GuideGridProps) {
+  const { t } = useTranslation();
+
   if (guides.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -13,20 +19,35 @@ export function GuideGrid({ guides }: GuideGridProps) {
           <span className="text-3xl">🚀</span>
         </div>
         <h3 className="mb-2 text-lg font-semibold text-foreground">
-          No guides yet
+          {t("gallery.noGuides")}
         </h3>
         <p className="max-w-sm text-sm text-muted-foreground">
-          Be the first to share a guide on building with AI. Your vibecoding journey starts here.
+          {t("gallery.noGuidesDesc")}
         </p>
       </div>
     );
   }
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+    >
       {guides.map((guide) => (
         <GuideCard key={guide.id} guide={guide} />
       ))}
-    </div>
+    </motion.div>
   );
 }

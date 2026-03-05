@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DEFAULT_CATEGORIES } from "@/constants/categories";
+import { useTranslation } from "@/lib/i18n/use-translation";
+import type { TranslationKey } from "@/lib/i18n/locales/en";
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
   Globe,
@@ -30,12 +32,16 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
   Palette,
 };
 
-const NAV_ITEMS = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/?sort=trending", label: "Trending", icon: Flame },
-  { href: "/?sort=recent", label: "Recent", icon: Clock },
-  { href: "/saved", label: "Saved", icon: Bookmark },
-];
+const CATEGORY_KEYS: Record<string, TranslationKey> = {
+  "web-apps": "category.webApps",
+  "mobile-apps": "category.mobileApps",
+  "apis-backend": "category.apisBackend",
+  "cli-tools": "category.cliTools",
+  "ai-ml": "category.aiMl",
+  "games": "category.games",
+  "automation": "category.automation",
+  "design-ui": "category.designUi",
+};
 
 interface SidebarProps {
   isOpen: boolean;
@@ -43,6 +49,14 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen }: SidebarProps) {
   const pathname = usePathname();
+  const { t } = useTranslation();
+
+  const NAV_ITEMS = [
+    { href: "/", label: t("sidebar.home"), icon: Home },
+    { href: "/?sort=trending", label: t("sidebar.trending"), icon: Flame },
+    { href: "/?sort=recent", label: t("sidebar.recent"), icon: Clock },
+    { href: "/saved", label: t("sidebar.saved"), icon: Bookmark },
+  ];
 
   return (
     <aside
@@ -62,7 +76,7 @@ export function Sidebar({ isOpen }: SidebarProps) {
             const isActive = pathname === href;
             return (
               <Link
-                key={label}
+                key={href}
                 href={href}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm",
@@ -84,13 +98,14 @@ export function Sidebar({ isOpen }: SidebarProps) {
 
         {/* Categories */}
         <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Categories
+          {t("sidebar.categories")}
         </p>
         <div className="space-y-0.5">
           {DEFAULT_CATEGORIES.map((cat) => {
             const Icon = ICON_MAP[cat.icon] || Globe;
             const href = `/category/${cat.slug}`;
             const isActive = pathname === href;
+            const catKey = CATEGORY_KEYS[cat.slug];
             return (
               <Link
                 key={cat.slug}
@@ -104,7 +119,7 @@ export function Sidebar({ isOpen }: SidebarProps) {
                 )}
               >
                 <Icon size={18} />
-                {cat.name}
+                {catKey ? t(catKey) : cat.name}
               </Link>
             );
           })}

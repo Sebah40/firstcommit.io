@@ -4,10 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Heart, Bookmark, Link2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { cn, formatNumber } from "@/lib/utils";
-import { toggleLike, toggleSave } from "@/lib/supabase/queries/guide-detail";
-import { deleteGuide } from "@/lib/supabase/queries/guides";
+import { toggleLikeAction, toggleSaveAction, deleteGuide } from "@/lib/supabase/auth";
 import { EditGuideModal } from "@/components/guide/edit-guide-modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import type { GuideDetail } from "@/types";
 
 interface GuideActionsProps {
@@ -36,6 +36,7 @@ export function GuideActions({
   onGuideDeleted,
 }: GuideActionsProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [liked, setLiked] = useState(initialLiked);
   const [saved, setSaved] = useState(initialSaved);
   const [likes, setLikes] = useState(likesCount);
@@ -73,7 +74,7 @@ export function GuideActions({
     const wasLiked = liked;
     setLiked(!wasLiked);
     setLikes((c) => (wasLiked ? c - 1 : c + 1));
-    await toggleLike(guideId, userId, wasLiked);
+    await toggleLikeAction(guideId, userId, wasLiked);
   }
 
   async function handleSave() {
@@ -84,7 +85,7 @@ export function GuideActions({
     const wasSaved = saved;
     setSaved(!wasSaved);
     setSaves((c) => (wasSaved ? c - 1 : c + 1));
-    await toggleSave(guideId, userId, wasSaved);
+    await toggleSaveAction(guideId, userId, wasSaved);
   }
 
   function handleShare() {
@@ -138,7 +139,7 @@ export function GuideActions({
           className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <Link2 size={16} />
-          {copied ? "Copied!" : "Share"}
+          {copied ? t("common.copied") : t("common.share")}
         </button>
 
         {/* Owner actions */}
@@ -160,7 +161,7 @@ export function GuideActions({
                   className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                 >
                   <Pencil size={14} />
-                  Edit
+                  {t("common.edit")}
                 </button>
                 <button
                   onClick={() => {
@@ -170,7 +171,7 @@ export function GuideActions({
                   className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-muted transition-colors"
                 >
                   <Trash2 size={14} />
-                  Delete
+                  {t("common.delete")}
                 </button>
               </div>
             )}
@@ -193,8 +194,8 @@ export function GuideActions({
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
         onConfirm={handleDelete}
-        title="Delete guide"
-        message="Are you sure you want to delete this guide? This action cannot be undone."
+        title={t("guide.deleteGuide")}
+        message={t("guide.deleteGuideConfirm")}
         loading={deleting}
       />
     </>

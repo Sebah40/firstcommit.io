@@ -13,7 +13,7 @@ export function RecommendationCard({ guide }: RecommendationCardProps) {
   return (
     <Link
       href={guideDetailPath(guide.id, guide.title)}
-      className="flex items-center gap-3 rounded-xl p-2 hover:bg-surface-hover transition-colors"
+      className="flex items-center gap-3 rounded-xl glass-card p-2 hover:bg-surface-hover/50 transition-colors group"
     >
       {/* Thumbnail */}
       <div className="h-12 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
@@ -34,7 +34,7 @@ export function RecommendationCard({ guide }: RecommendationCardProps) {
 
       {/* Info */}
       <div className="min-w-0 flex-1">
-        <h4 className="line-clamp-1 text-sm font-medium text-foreground">
+        <h4 className="line-clamp-1 text-base font-semibold font-serif text-foreground group-hover:text-accent transition-colors">
           {guide.title}
         </h4>
         <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">

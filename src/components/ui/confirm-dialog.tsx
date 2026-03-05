@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTranslation } from "@/lib/i18n/use-translation";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -18,9 +19,11 @@ export function ConfirmDialog({
   onConfirm,
   title,
   message,
-  confirmLabel = "Delete",
+  confirmLabel,
   loading = false,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation();
+  const resolvedLabel = confirmLabel ?? t("common.delete");
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,14 +52,14 @@ export function ConfirmDialog({
             disabled={loading}
             className="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
             className="rounded-full bg-red-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
           >
-            {loading ? "Deleting..." : confirmLabel}
+            {loading ? t("common.deleting") : resolvedLabel}
           </button>
         </div>
       </div>

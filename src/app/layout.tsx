@@ -1,23 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Outfit, Newsreader } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { LocaleProvider } from "@/lib/i18n/locale-provider";
 import { AppShell } from "@/components/layout/app-shell";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
   subsets: ["latin"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
-  title: "Pathway — Learn how to build with AI",
+  title: "First Commit — See how it was built",
   description:
-    "Step-by-step guides for building with AI. Learn how to create apps, tools, and more with Claude, GPT, and other AI tools.",
+    "See how it was built. Developers share step-by-step build stories — from first commit to production — powered by AI coding sessions.",
 };
 
 export default function RootLayout({
@@ -28,10 +30,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
+        className={`${outfit.variable} ${newsreader.variable} font-sans antialiased selection:bg-accent/30 selection:text-accent-foreground`}
       >
         <ThemeProvider>
-          <AppShell>{children}</AppShell>
+          <LocaleProvider>
+            <AppShell>{children}</AppShell>
+          </LocaleProvider>
         </ThemeProvider>
       </body>
     </html>

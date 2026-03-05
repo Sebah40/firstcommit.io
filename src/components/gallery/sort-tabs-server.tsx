@@ -1,23 +1,29 @@
+"use client";
+
 import Link from "next/link";
 import { Flame, Clock, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import type { SortOption } from "@/types";
+import type { TranslationKey } from "@/lib/i18n/locales/en";
 
 interface SortTabsServerProps {
   active: SortOption;
   query?: string;
 }
 
-const TABS: { value: SortOption; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
-  { value: "trending", label: "Trending", icon: Flame },
-  { value: "recent", label: "Recent", icon: Clock },
-  { value: "popular", label: "Popular", icon: TrendingUp },
+const TABS: { value: SortOption; labelKey: TranslationKey; icon: React.ComponentType<{ size?: number }> }[] = [
+  { value: "trending", labelKey: "gallery.trending", icon: Flame },
+  { value: "recent", labelKey: "gallery.recent", icon: Clock },
+  { value: "popular", labelKey: "gallery.popular", icon: TrendingUp },
 ];
 
 export function SortTabsServer({ active, query }: SortTabsServerProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex items-center gap-1">
-      {TABS.map(({ value, label, icon: Icon }) => {
+      {TABS.map(({ value, labelKey, icon: Icon }) => {
         const params = new URLSearchParams();
         if (value !== "trending") {
           params.set("sort", value);
@@ -39,7 +45,7 @@ export function SortTabsServer({ active, query }: SortTabsServerProps) {
             )}
           >
             <Icon size={14} />
-            {label}
+            {t(labelKey)}
           </Link>
         );
       })}

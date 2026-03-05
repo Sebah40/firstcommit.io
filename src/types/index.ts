@@ -41,27 +41,29 @@ export interface Post {
   id: string;
   user_id: string;
   title: string;
-  description: string;
+  hook_description: string;
   techs: string[];
   category_id: string | null;
   likes_count: number;
   saves_count: number;
   comments_count: number;
-  stars_count: number;
   trending_score: number;
   is_hidden: boolean;
   created_at: string;
   updated_at: string;
-  // Guide fields
   difficulty: Difficulty | null;
   time_estimate_minutes: number | null;
   is_vibe_coded: boolean;
   guide_type: GuideType;
   prerequisites: string[];
   what_youll_build: string | null;
-  original_json: string | null;
   completions_count: number;
   avg_rating: number | null;
+  thumbnail_url: string | null;
+  message_count: number;
+  files_changed: number;
+  highlight_snippet: string | null;
+  content: string | null;
   // Joined
   profile?: Profile;
   category?: Category;
@@ -78,69 +80,15 @@ export interface PostMedia {
   order: number;
 }
 
-export interface MessageAnnotation {
-  id: string;
-  message_id: string;
-  post_id: string;
-  content: string;
-  created_at: string;
-}
-
-export interface TimelineChapter {
+export interface PostStage {
   id: string;
   post_id: string;
-  title: string;
-  start_order: number;
-  end_order: number;
-  created_at: string;
-}
-
-export interface ChatMessage {
-  id: string;
-  post_id: string;
-  role: "human" | "assistant";
-  content: string;
-  tool_action: string | null;
-  file_path: string | null;
-  order: number;
-  // Joined
-  annotation?: MessageAnnotation;
-  is_starred?: boolean;
-}
-
-export interface GuideStep {
-  id: string;
-  post_id: string;
-  title: string;
-  description: string | null;
-  author_annotation: string | null;
-  suggested_prompt: string | null;
-  checkpoint_description: string | null;
-  checkpoint_media_url: string | null;
-  order: number;
-  created_at: string;
-}
-
-export interface GuideBlock {
-  id: string;
-  post_id: string;
-  role: "human" | "assistant";
-  content: string;
-  tool_action: string | null;
-  file_path: string | null;
-  original_order: number;
-  auto_category: "scaffold" | "feature" | "bug_fix" | "refactor" | "question" | "file_change" | "command" | null;
-  files_touched: string[];
-  created_at: string;
-}
-
-export interface StepBlock {
-  id: string;
-  step_id: string;
-  block_id: string;
-  position: number;
-  display_mode: "full" | "collapsed" | "trimmed" | "ghost";
-  author_note: string | null;
+  stage_order: number;
+  stage_name: string;
+  summary: string;
+  key_decisions: string[];
+  problems_hit: string[];
+  duration_messages: number;
   created_at: string;
 }
 
@@ -183,14 +131,9 @@ export interface Notification {
   post?: Post;
 }
 
-export interface PostDetail extends Post {
-  chat_messages?: ChatMessage[];
-  timeline_chapters?: TimelineChapter[];
-  guide_steps?: GuideStep[];
-  guide_blocks?: GuideBlock[];
+export interface GuideDetail extends Post {
+  stages?: PostStage[];
 }
-
-export type GuideDetail = PostDetail;
 
 export type SortOption = "recent" | "popular" | "trending" | "completed";
 

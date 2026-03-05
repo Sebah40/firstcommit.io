@@ -2,7 +2,9 @@
 
 import { Grid3X3, MessageCircle, Heart, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import type { ProfileTab } from "@/types";
+import type { TranslationKey } from "@/lib/i18n/locales/en";
 
 interface ProfileTabsProps {
   active: ProfileTab;
@@ -11,14 +13,16 @@ interface ProfileTabsProps {
   showSaved: boolean;
 }
 
-const ALL_TABS: { value: ProfileTab; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
-  { value: "guides", label: "Guides", icon: Grid3X3 },
-  { value: "comments", label: "Comments", icon: MessageCircle },
-  { value: "liked", label: "Liked", icon: Heart },
-  { value: "saved", label: "Saved", icon: Bookmark },
+const ALL_TABS: { value: ProfileTab; labelKey: TranslationKey; icon: React.ComponentType<{ size?: number }> }[] = [
+  { value: "guides", labelKey: "profile.guides", icon: Grid3X3 },
+  { value: "comments", labelKey: "profile.comments", icon: MessageCircle },
+  { value: "liked", labelKey: "profile.liked", icon: Heart },
+  { value: "saved", labelKey: "profile.saved", icon: Bookmark },
 ];
 
 export function ProfileTabs({ active, onChange, showLiked, showSaved }: ProfileTabsProps) {
+  const { t } = useTranslation();
+
   const tabs = ALL_TABS.filter((tab) => {
     if (tab.value === "liked") return showLiked;
     if (tab.value === "saved") return showSaved;
@@ -27,7 +31,7 @@ export function ProfileTabs({ active, onChange, showLiked, showSaved }: ProfileT
 
   return (
     <div className="flex items-center gap-1">
-      {tabs.map(({ value, label, icon: Icon }) => (
+      {tabs.map(({ value, labelKey, icon: Icon }) => (
         <button
           key={value}
           onClick={() => onChange(value)}
@@ -39,7 +43,7 @@ export function ProfileTabs({ active, onChange, showLiked, showSaved }: ProfileT
           )}
         >
           <Icon size={14} />
-          {label}
+          {t(labelKey)}
         </button>
       ))}
     </div>

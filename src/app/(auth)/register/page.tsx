@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/use-translation";
 
 export default function RegisterPage() {
   const [username, setUsername] = useState("");
@@ -13,6 +14,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { t } = useTranslation();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -20,13 +22,13 @@ export default function RegisterPage() {
     setLoading(true);
 
     if (username.length < 3) {
-      setError("Username must be at least 3 characters");
+      setError(t("auth.usernameMinLength"));
       setLoading(false);
       return;
     }
 
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      setError("Username can only contain letters, numbers, and underscores");
+      setError(t("auth.usernameChars"));
       setLoading(false);
       return;
     }
@@ -53,16 +55,16 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-[80vh] items-center justify-center">
       <div className="w-full max-w-sm">
-        <h1 className="mb-1 text-2xl font-bold text-foreground">Create account</h1>
+        <h1 className="mb-1 text-2xl font-bold text-foreground">{t("auth.createAccount")}</h1>
         <p className="mb-8 text-sm text-muted-foreground">
-          Join Pathway and share what you build
+          {t("auth.joinPathway")}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <input
               type="text"
-              placeholder="Username"
+              placeholder={t("auth.username")}
               value={username}
               onChange={(e) => setUsername(e.target.value.toLowerCase())}
               required
@@ -76,7 +78,7 @@ export default function RegisterPage() {
           <div>
             <input
               type="email"
-              placeholder="Email"
+              placeholder={t("common.email")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -90,7 +92,7 @@ export default function RegisterPage() {
           <div>
             <input
               type="password"
-              placeholder="Password (min 6 characters)"
+              placeholder={t("auth.passwordMin")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -116,14 +118,14 @@ export default function RegisterPage() {
               "disabled:opacity-50"
             )}
           >
-            {loading ? "Creating account..." : "Create account"}
+            {loading ? t("auth.creatingAccount") : t("auth.createAccount")}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
+          {t("auth.hasAccount")}{" "}
           <Link href="/login" className="text-accent hover:underline">
-            Sign in
+            {t("common.signIn")}
           </Link>
         </p>
       </div>
