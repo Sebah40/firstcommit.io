@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, MessageCircle, Bookmark, MessageSquare, FileCode } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, MessageSquare, FileCode, ExternalLink } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { formatNumber, formatRelativeTime, guideDetailPath } from "@/lib/utils";
 import { getTechColor } from "@/lib/utils/tech-icons";
@@ -90,6 +90,16 @@ export function GuideCard({ guide }: GuideCardProps) {
           <h3 className="mb-1.5 line-clamp-2 text-sm font-medium text-foreground">
             {guide.title}
           </h3>
+
+          {/* Instance URL */}
+          {guide.instance_url && (
+            <div className="mb-1.5">
+              <span className="inline-flex items-center gap-1 text-xs text-accent">
+                <ExternalLink size={10} />
+                {guide.instance_url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+              </span>
+            </div>
+          )}
 
           {/* Conversation stats */}
           {(guide.message_count > 0 || guide.files_changed > 0) && (

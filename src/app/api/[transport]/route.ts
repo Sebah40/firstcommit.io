@@ -130,6 +130,12 @@ The sum of all duration_messages should roughly equal the total user messages fo
             .describe(
               "Total user messages found across ALL session files. Must be the real count, not an estimate."
             ),
+          instance_url: z
+            .string()
+            .optional()
+            .describe(
+              "The live URL where the project is deployed (e.g. https://myapp.com). Ask the user if they have one."
+            ),
           anonymous: z
             .boolean()
             .optional()
@@ -162,7 +168,7 @@ The sum of all duration_messages should roughly equal the total user messages fo
             .describe("4-12 chronological project stages covering the FULL project history"),
         },
       },
-      async ({ title, hook, body, techs, total_sessions_read, total_user_messages, anonymous, stages }, extra) => {
+      async ({ title, hook, body, techs, total_sessions_read, total_user_messages, instance_url, anonymous, stages }, extra) => {
         const userId = (extra.authInfo?.extra as { userId?: string })?.userId;
 
         // Auth check shortcut
@@ -230,6 +236,7 @@ The sum of all duration_messages should roughly equal the total user messages fo
           techs,
           message_count: totalMessages,
         };
+        if (instance_url) postInsert.instance_url = instance_url.trim();
         if (userId && !anonymous) postInsert.user_id = userId;
 
         const { data: post, error: postError } = (await supabase
