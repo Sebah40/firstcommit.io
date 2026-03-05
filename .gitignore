@@ -4,3 +4,4 @@ node_modules/
 .env*.local
 db-password
 supabase/.temp/
+.DS_Store
