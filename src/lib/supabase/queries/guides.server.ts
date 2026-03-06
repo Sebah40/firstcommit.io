@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Guide } from "@/types";
+import { translateToEnglish } from "@/lib/translate";
 
 async function _fetchGuides(
   supabase: SupabaseClient,
@@ -48,8 +49,26 @@ export async function fetchGuidesServer(
   sort: string = "trending",
   search?: string
 ): Promise<Guide[]> {
-  // Don't cache search queries — they vary too much and should be fast anyway
   if (search) {
+    // Translate the query to English so it matches English content in the DB
+    const englishSearch = await translateToEnglish(search);
+    // Search with both original and translated terms for best coverage
+    if (englishSearch.toLowerCase() !== search.toLowerCase()) {
+      const [origResults, transResults] = await Promise.all([
+        _fetchGuides(supabase, sort, search),
+        _fetchGuides(supabase, sort, englishSearch),
+      ]);
+      // Merge and deduplicate
+      const seen = new Set<string>();
+      const merged: Guide[] = [];
+      for (const g of [...transResults, ...origResults]) {
+        if (!seen.has(g.id)) {
+          seen.add(g.id);
+          merged.push(g);
+        }
+      }
+      return merged;
+    }
     return _fetchGuides(supabase, sort, search);
   }
 
