@@ -14,6 +14,9 @@ import {
   GitBranch,
   FileCode,
   Sparkles,
+  BookOpen,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "@/lib/i18n/use-translation";
@@ -29,6 +32,9 @@ const SETUP_COMMANDS: { tool: string; command: string }[] = [
 const tools: { name: string; descKey: TranslationKey; icon: typeof Upload }[] = [
   { name: "firstcommit_publish", descKey: "connect.toolPublish", icon: Upload },
   { name: "firstcommit_search", descKey: "connect.toolSearch", icon: Search },
+  { name: "firstcommit_read", descKey: "connect.toolRead", icon: BookOpen },
+  { name: "firstcommit_edit", descKey: "connect.toolEdit", icon: Pencil },
+  { name: "firstcommit_delete", descKey: "connect.toolDelete", icon: Trash2 },
 ];
 
 function TypewriterText({ text, delay = 0 }: { text: string; delay?: number }) {

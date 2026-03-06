@@ -378,6 +378,255 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
       }
     );
 
+    // ── firstcommit_read ────────────────────────────────────────
+    server.registerTool(
+      "firstcommit_read",
+      {
+        title: "Read Post",
+        description: `Read a First Commit post by ID. Returns full content including title, body, stages, techs, and metadata. No authentication required.`,
+        inputSchema: {
+          post_id: z.string().describe("The post UUID (from search results or a post URL)"),
+        },
+      },
+      async ({ post_id }) => {
+        const supabase = getSupabase();
+
+        const { data: post, error } = await supabase
+          .from("posts")
+          .select("id, title, hook_description, content, techs, instance_url, message_count, files_changed, difficulty, guide_type, prerequisites, what_youll_build, is_vibe_coded, created_at, user_id, profile:profiles!posts_user_id_fkey(username)")
+          .eq("id", post_id)
+          .eq("is_hidden", false)
+          .single();
+
+        if (error || !post) {
+          return {
+            content: [{ type: "text" as const, text: `Post not found or has been deleted.` }],
+          };
+        }
+
+        const { data: stages } = await supabase
+          .from("post_stages")
+          .select("stage_order, stage_name, summary, key_decisions, problems_hit, duration_messages")
+          .eq("post_id", post_id)
+          .order("stage_order", { ascending: true });
+
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+        const postUrl = `${baseUrl}/guide/${post.id}/${slugify(post.title)}`;
+
+        const lines = [
+          `# ${post.title}`,
+          ``,
+          `**URL:** ${postUrl}`,
+          `**Author:** ${(post as any).profile?.username || "anonymous"}`,
+          `**Techs:** ${post.techs?.join(", ") || "none"}`,
+          `**Difficulty:** ${post.difficulty || "not set"}`,
+          `**Messages:** ${post.message_count} | **Files changed:** ${post.files_changed}`,
+          post.instance_url ? `**Live URL:** ${post.instance_url}` : null,
+          ``,
+          `## Hook`,
+          post.hook_description || "No hook description",
+          ``,
+          `## Content`,
+          post.content || "No content",
+        ].filter(Boolean);
+
+        if (stages?.length) {
+          lines.push(``, `## Stages`);
+          for (const s of stages) {
+            lines.push(
+              ``,
+              `### ${s.stage_order}. ${s.stage_name}`,
+              s.summary,
+              s.key_decisions?.length ? `**Key decisions:** ${s.key_decisions.join("; ")}` : "",
+              s.problems_hit?.length ? `**Problems hit:** ${s.problems_hit.join("; ")}` : "",
+              `**Duration:** ~${s.duration_messages} messages`,
+            );
+          }
+        }
+
+        return {
+          content: [{ type: "text" as const, text: lines.filter(Boolean).join("\n") }],
+        };
+      }
+    );
+
+    // ── firstcommit_edit ────────────────────────────────────────
+    server.registerTool(
+      "firstcommit_edit",
+      {
+        title: "Edit Post",
+        description: `Edit a First Commit post you own. Requires authentication. Only the original author can edit their post. You can update any combination of fields — only pass the fields you want to change.`,
+        inputSchema: {
+          post_id: z.string().describe("The post UUID to edit"),
+          title: z.string().optional().describe("New title"),
+          hook: z.string().optional().describe("New hook description"),
+          body: z.string().optional().describe("New main content (markdown)"),
+          techs: z.array(z.string()).optional().describe("New tech stack array"),
+          instance_url: z.string().optional().describe("New live URL (empty string to remove)"),
+          stages: z
+            .array(
+              z.object({
+                stage_name: z.string(),
+                summary: z.string(),
+                key_decisions: z.array(z.string()),
+                problems_hit: z.array(z.string()),
+                duration_messages: z.number(),
+              })
+            )
+            .optional()
+            .describe("Replace all stages with this new array (omit to keep existing stages)"),
+        },
+      },
+      async ({ post_id, title, hook, body, techs, instance_url, stages }, extra) => {
+        const userId = (extra.authInfo?.extra as { userId?: string })?.userId;
+        if (!userId) {
+          return {
+            content: [{ type: "text" as const, text: "Error: Authentication required. Run `claude mcp add --transport http firstcommit https://firstcommit.io/api/mcp` and sign in first." }],
+          };
+        }
+
+        const supabase = getSupabase();
+
+        // Verify ownership
+        const { data: post, error: fetchErr } = await supabase
+          .from("posts")
+          .select("id, user_id, title")
+          .eq("id", post_id)
+          .eq("is_hidden", false)
+          .single();
+
+        if (fetchErr || !post) {
+          return {
+            content: [{ type: "text" as const, text: "Post not found or has been deleted." }],
+          };
+        }
+        if (post.user_id !== userId) {
+          return {
+            content: [{ type: "text" as const, text: "Error: You can only edit your own posts." }],
+          };
+        }
+
+        // Build update object
+        const update: Record<string, unknown> = {};
+        if (title !== undefined) update.title = title.trim();
+        if (hook !== undefined) update.hook_description = hook.trim();
+        if (body !== undefined) update.content = body.trim();
+        if (techs !== undefined) update.techs = techs;
+        if (instance_url !== undefined) update.instance_url = instance_url.trim() || null;
+
+        if (Object.keys(update).length > 0) {
+          const { error: updateErr } = await supabase
+            .from("posts")
+            .update(update)
+            .eq("id", post_id);
+
+          if (updateErr) {
+            return {
+              content: [{ type: "text" as const, text: `Error updating post: ${updateErr.message}` }],
+            };
+          }
+        }
+
+        // Replace stages if provided
+        if (stages !== undefined) {
+          await supabase.from("post_stages").delete().eq("post_id", post_id);
+
+          const stageRows = stages.map((s, i) => ({
+            post_id,
+            stage_order: i + 1,
+            stage_name: s.stage_name,
+            summary: s.summary,
+            key_decisions: s.key_decisions ?? [],
+            problems_hit: s.problems_hit ?? [],
+            duration_messages: s.duration_messages ?? 0,
+          }));
+
+          if (stageRows.length > 0) {
+            const { error: stagesErr } = await supabase.from("post_stages").insert(stageRows);
+            if (stagesErr) {
+              return {
+                content: [{ type: "text" as const, text: `Post updated but stages replacement failed: ${stagesErr.message}` }],
+              };
+            }
+          }
+        }
+
+        const finalTitle = (title ?? post.title).trim();
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+        const postUrl = `${baseUrl}/guide/${post_id}/${slugify(finalTitle)}`;
+
+        const changed = Object.keys(update);
+        if (stages !== undefined) changed.push("stages");
+
+        return {
+          content: [{ type: "text" as const, text: `Post updated successfully!\n\nChanged: ${changed.join(", ")}\nURL: ${postUrl}` }],
+        };
+      }
+    );
+
+    // ── firstcommit_delete ──────────────────────────────────────
+    server.registerTool(
+      "firstcommit_delete",
+      {
+        title: "Delete Post",
+        description: `Delete a First Commit post you own. Requires authentication. Only the original author can delete their post. This hides the post from public view (soft delete).`,
+        inputSchema: {
+          post_id: z.string().describe("The post UUID to delete"),
+          confirm: z.boolean().describe("Must be true to confirm deletion. Ask the user to confirm before setting this."),
+        },
+      },
+      async ({ post_id, confirm }, extra) => {
+        const userId = (extra.authInfo?.extra as { userId?: string })?.userId;
+        if (!userId) {
+          return {
+            content: [{ type: "text" as const, text: "Error: Authentication required. Run `claude mcp add --transport http firstcommit https://firstcommit.io/api/mcp` and sign in first." }],
+          };
+        }
+
+        if (!confirm) {
+          return {
+            content: [{ type: "text" as const, text: "Deletion cancelled. Set confirm: true to proceed." }],
+          };
+        }
+
+        const supabase = getSupabase();
+
+        // Verify ownership
+        const { data: post, error: fetchErr } = await supabase
+          .from("posts")
+          .select("id, user_id, title")
+          .eq("id", post_id)
+          .eq("is_hidden", false)
+          .single();
+
+        if (fetchErr || !post) {
+          return {
+            content: [{ type: "text" as const, text: "Post not found or already deleted." }],
+          };
+        }
+        if (post.user_id !== userId) {
+          return {
+            content: [{ type: "text" as const, text: "Error: You can only delete your own posts." }],
+          };
+        }
+
+        const { error: deleteErr } = await supabase
+          .from("posts")
+          .update({ is_hidden: true })
+          .eq("id", post_id);
+
+        if (deleteErr) {
+          return {
+            content: [{ type: "text" as const, text: `Error deleting post: ${deleteErr.message}` }],
+          };
+        }
+
+        return {
+          content: [{ type: "text" as const, text: `Post "${post.title}" has been deleted (hidden from public view).` }],
+        };
+      }
+    );
+
   },
   {},
   {
