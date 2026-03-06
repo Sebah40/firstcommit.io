@@ -15,9 +15,13 @@ export function GuideGrid({ guides }: GuideGridProps) {
   if (guides.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-muted">
+        <motion.div
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+          className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-muted"
+        >
           <span className="text-3xl">🚀</span>
-        </div>
+        </motion.div>
         <h3 className="mb-2 text-lg font-semibold text-foreground">
           {t("gallery.noGuides")}
         </h3>
@@ -33,7 +37,7 @@ export function GuideGrid({ guides }: GuideGridProps) {
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.08,
       },
     },
   };
@@ -43,7 +47,7 @@ export function GuideGrid({ guides }: GuideGridProps) {
       variants={container}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
     >
       {guides.map((guide) => (
         <GuideCard key={guide.id} guide={guide} />

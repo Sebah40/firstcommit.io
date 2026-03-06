@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useTranslation } from "@/lib/i18n/use-translation";
 
 const cache = new Map<string, string>();
@@ -18,33 +18,36 @@ export function useTranslateTexts(texts: string[]): string[] {
   const [translated, setTranslated] = useState<string[]>(texts);
   const prevKey = useRef("");
 
+  // Stabilize the texts array — only change identity when content changes
+  const stableKey = texts.join("\0");
+  const stableTexts = useMemo(() => texts, [stableKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
-    if (locale === "en" || texts.length === 0) {
-      setTranslated(texts);
+    if (locale === "en" || stableTexts.length === 0) {
+      setTranslated(stableTexts);
       return;
     }
 
-    // Build a stable key to avoid re-fetching
-    const key = texts.join("\0") + "|" + locale;
+    const key = stableKey + "|" + locale;
     if (key === prevKey.current) return;
     prevKey.current = key;
 
     // Check cache first
-    const allCached = texts.every((t) => cache.has(cacheKey(t, locale)));
+    const allCached = stableTexts.every((t) => cache.has(cacheKey(t, locale)));
     if (allCached) {
-      setTranslated(texts.map((t) => cache.get(cacheKey(t, locale))!));
+      setTranslated(stableTexts.map((t) => cache.get(cacheKey(t, locale))!));
       return;
     }
 
     // Find which texts need translation
     const needed: { index: number; text: string }[] = [];
-    const result = [...texts];
-    for (let i = 0; i < texts.length; i++) {
-      const cached = cache.get(cacheKey(texts[i], locale));
+    const result = [...stableTexts];
+    for (let i = 0; i < stableTexts.length; i++) {
+      const cached = cache.get(cacheKey(stableTexts[i], locale));
       if (cached) {
         result[i] = cached;
-      } else if (texts[i].trim()) {
-        needed.push({ index: i, text: texts[i] });
+      } else if (stableTexts[i].trim()) {
+        needed.push({ index: i, text: stableTexts[i] });
       }
     }
 
@@ -80,9 +83,9 @@ export function useTranslateTexts(texts: string[]): string[] {
     return () => {
       cancelled = true;
     };
-  }, [texts, locale]);
+  }, [stableTexts, stableKey, locale]);
 
-  return locale === "en" ? texts : translated;
+  return locale === "en" ? stableTexts : translated;
 }
 
 /**

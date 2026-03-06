@@ -22,15 +22,15 @@ export function GuideCard({ guide }: GuideCardProps) {
   ]);
 
   const item = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { duration: 0.3 } },
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
   };
 
   return (
     <Link href={guideDetailPath(guide.id, guide.title)} className="group block">
       <motion.article
         variants={item}
-        className="overflow-hidden rounded-xl bg-surface shadow-sm border border-border/40 transition-all duration-300 hover:scale-[1.02] hover:shadow-md hover:border-accent/40"
+        className="overflow-hidden rounded-xl bg-surface shadow-sm border border-border/40 transition-all duration-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/5 hover:border-accent/50"
       >
         {/* Thumbnail */}
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-muted">
@@ -38,10 +38,10 @@ export function GuideCard({ guide }: GuideCardProps) {
             <img
               src={guide.media[0].url}
               alt={guide.title}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10">
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 transition-transform duration-700 group-hover:scale-105">
               <span className="text-3xl font-bold text-accent/60">
                 {guide.title.charAt(0).toUpperCase()}
               </span>
