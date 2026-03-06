@@ -1,9 +1,10 @@
+import { unstable_cache } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Guide } from "@/types";
 
-export async function fetchGuidesServer(
+async function _fetchGuides(
   supabase: SupabaseClient,
-  sort: string = "trending",
+  sort: string,
   search?: string
 ): Promise<Guide[]> {
   let query = supabase
@@ -16,7 +17,7 @@ export async function fetchGuidesServer(
     .eq("is_hidden", false);
 
   if (search) {
-    query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+    query = query.or(`title.ilike.%${search}%,hook_description.ilike.%${search}%,content.ilike.%${search}%`);
   }
 
   switch (sort) {
@@ -40,4 +41,23 @@ export async function fetchGuidesServer(
   }
 
   return data as unknown as Guide[];
+}
+
+export async function fetchGuidesServer(
+  supabase: SupabaseClient,
+  sort: string = "trending",
+  search?: string
+): Promise<Guide[]> {
+  // Don't cache search queries — they vary too much and should be fast anyway
+  if (search) {
+    return _fetchGuides(supabase, sort, search);
+  }
+
+  const cached = unstable_cache(
+    () => _fetchGuides(supabase, sort),
+    [`guides-${sort}`],
+    { revalidate: 60, tags: ["guides"] }
+  );
+
+  return cached();
 }

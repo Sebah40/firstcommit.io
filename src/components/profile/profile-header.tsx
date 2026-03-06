@@ -354,9 +354,7 @@ export function ProfileHeader({ profile, isOwner, onProfileUpdate }: ProfileHead
                   )}
                   {profile.cv_url && (
                     <a
-                      href={profile.cv_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`/profile/${profile.username}/cv`}
                       className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                     >
                       <FileText size={16} />

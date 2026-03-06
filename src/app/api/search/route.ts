@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       profile:profiles!posts_user_id_fkey(username)
     `)
     .eq("is_hidden", false)
-    .or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`);
+    .or(`title.ilike.${searchTerm},hook_description.ilike.${searchTerm},content.ilike.${searchTerm}`);
 
   // Apply minimum quality thresholds
   if (minQuality === "medium") {
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
   const results = (data ?? []).map((post: any) => ({
     id: post.id,
     title: post.title,
-    description: post.description,
+    description: post.hook_description,
     techs: post.techs,
     author: post.profile?.username ?? "unknown",
     likes_count: post.likes_count ?? 0,
@@ -62,5 +62,7 @@ export async function GET(request: NextRequest) {
 
   results.sort((a: any, b: any) => b.quality_score - a.quality_score);
 
-  return NextResponse.json({ results });
+  return NextResponse.json({ results }, {
+    headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" },
+  });
 }
