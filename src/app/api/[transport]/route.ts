@@ -58,59 +58,52 @@ const handler = createMcpHandler(
       "firstcommit_publish",
       {
         title: "Publish Timeline",
-        description: `Publish a "How it was Built" post to First Commit. This is a pure database insert — you must provide fully crafted content.
+        description: `Publish a "How it was Built" post to First Commit.
 
-## Step 0: Test authentication FIRST
+IMPORTANT: Follow these steps EXACTLY. Do NOT improvise or add extra exploration steps.
 
-Call this tool immediately with ONLY the title field set to "__auth_check__" and all other required fields as empty/zero. If you get "Authentication required", STOP and tell the user to set up the MCP server for their tool. Do NOT continue to read files if auth fails.
+## Step 0: Auth check
 
-## Step 1: Discover and count ALL conversation files (single command)
+Call this tool with title="__auth_check__" and all other fields empty/zero. If auth fails, ask the user whether to sign up or post anonymously. Do NOT read files until auth is resolved.
 
-Find your conversation/session files based on which AI coding tool you are:
+## Step 1: Gather everything in ONE parallel step
 
-### Claude Code
-Session files are at ~/.claude/projects/ (macOS/Linux) or %USERPROFILE%\\.claude\\projects\\ (Windows).
-The directory name is the project's absolute path with slashes replaced by dashes. e.g. /Users/jane/my-project → -Users-jane-my-project/
+Run ALL of these in a SINGLE message (parallel tool calls):
 
-Run this ONE bash command:
+**1a) Count sessions + messages.** Run this ONE command (Claude Code):
 for f in ~/.claude/projects/$(pwd | sed 's|/|-|g; s|^-||')/*.jsonl; do bn=$(basename "$f"); [[ "$bn" == agent-* ]] && continue; c=$(grep -c '"type":"user"' "$f" 2>/dev/null || echo 0); echo "$c $bn"; done | sort -rn | awk '{s+=$1; n++; print} END{print "---"; print s " total user messages across " n " sessions"}'
 
-### Gemini CLI
-Session files are at ~/.gemini/history/ (check for .json files). Count user turns in each conversation file.
+For Gemini CLI: check ~/.gemini/history/*.json. For Cursor: check .cursor/ or ~/Library/Application Support/Cursor/. If no session files exist, use your current conversation context (set total_sessions_read=1).
 
-### Cursor
-Conversation data is in the Cursor workspace storage. Check .cursor/ in the project root or ~/Library/Application Support/Cursor/ (macOS). Look for conversation JSON files.
+**1b) Get tech stack.** Read package.json (or equivalent: requirements.txt, Cargo.toml, go.mod, etc.) to extract all technologies. Do NOT guess techs from session files.
 
-### Other tools / Fallback
-If you cannot find session files for your specific tool, use your CURRENT conversation context. Count the user messages in this conversation, summarize the full arc of what was built, and publish based on what you know. Set total_sessions_read to 1 and total_user_messages to the count from this conversation.
+**1c) Get project context.** Read README.md if it exists, and run "git log --oneline -20" for commit history.
 
-Exclude subagent/child files (e.g. files starting with "agent-").
+**1d) Ask the user** (in the SAME message): "Do you have a live deployed URL for this project?"
 
-## Step 2: Read session files and understand the project arc
+## Step 2: Read session content (ONE command per session)
 
-For each session file (from the output above), read the first few user messages to understand what that session covered. For large sessions (200+ messages), sample messages at intervals to catch the full arc. You MUST process ALL session files, not just the current one.
+For EACH session file from Step 1a, run ONE command to extract all user text messages:
+grep '"type":"user"' <file> | python3 -c "import sys,json; [print(f'[{i}]',json.loads(l)['message']['content'] if isinstance(json.loads(l)['message']['content'],str) else '[tool_result]') for i,l in enumerate(sys.stdin) if isinstance(json.loads(l).get('message',{}).get('content'),None.__class__)==False]" 2>/dev/null | head -80
 
-## Step 3: Craft the post
+Run ALL session files in parallel. For sessions with 200+ messages, this head -80 captures enough. Do NOT run multiple grep commands per file or explore files one by one.
 
-WRITING STYLE — This is a BUILD GUIDE, not a changelog. Each stage should read like a tutorial section. Someone with a similar tech stack should be able to follow your stages to build something comparable. Write in narrative form: "We started by..., then discovered that..., which led to..."
+## Step 3: Publish
 
-PRIVACY — NEVER include company-specific identifiers, internal column names, table names, variable names, API keys, internal URLs, employee names, or proprietary business logic. Instead, describe WHAT was built generically. Bad: "Built a query on Q$ART_CANT_CPRA_VTA to cross-reference ARTIC_EQUIV". Good: "Built a purchase-vs-sales comparison tool with product equivalence mapping to normalize different unit types (e.g. meters vs boxes)."
+Call this tool with all fields populated. Do NOT make a second pass to "verify" or "refine" — publish on the first call.
 
-SCALE — Use roughly 1 stage per 100-200 user messages. A 200-message project gets 2-4 stages. A 1000-message project gets 6-10. A 5000-message project gets 15-25. Do NOT compress a massive project into 4 generic stages.
+WRITING RULES:
+- BUILD GUIDE, not changelog. Write in narrative form: "We started by..., discovered that..., which led to..."
+- PRIVACY: Never include internal DB names, API keys, internal URLs, employee names, or proprietary code. Describe WHAT was built generically.
+- SCALE: ~1 stage per 100-200 user messages. 200 msgs → 2-4 stages. 1000 msgs → 6-10 stages.
+- title: Compelling blog-style title covering the full project scope
+- hook: 2-3 sentences. What was built, why it's interesting.
+- body: Main content (markdown, 500-2000 words). Dev blog style narrative — set the scene, narrate the arc, highlight challenges and breakthroughs. NOT a summary — it's the story.
+- techs: From package.json, not guessed
+- stages: Each has stage_name (2-5 words), summary (5-15 sentences, narrative walkthrough), key_decisions (choices + why), problems_hit ("tried X, failed because Y, solved with Z"), duration_messages
+- duration_messages across all stages should roughly equal total_user_messages from Step 1a.
 
-Fields:
-- title: Compelling blog-style title covering the FULL project scope
-- hook: 2-3 sentence description. What was built, why it's interesting, what makes the journey worth reading.
-- body: The MAIN CONTENT of the post (markdown, 500-2000 words). This is what readers see first and what makes them stay. Write it like a dev blog post: set the scene (what problem existed, what the user wanted to build), narrate the high-level arc of the build journey, highlight the most interesting challenges and breakthroughs, and tease what the timeline stages will show in detail. This is NOT a summary — it's the story. Use headers, short paragraphs, and an engaging voice. A reader should finish the body thinking "I want to see exactly how they built each part" and then scroll into the stages.
-- techs: ALL technologies used across the entire project
-- stages: The detailed build timeline. Each stage has:
-  - stage_name: Short name (2-5 words)
-  - summary: A narrative walkthrough of this stage (5-15 sentences). Explain what was built, in what order, why those choices were made, what was tried that didn't work, and how problems were solved. Write it so someone could follow along to build something similar.
-  - key_decisions: Choices made AND why. Include alternatives considered. "Used Supabase RLS instead of custom middleware — simpler to maintain and fewer auth edge cases."
-  - problems_hit: Written as "tried X, failed because Y, solved with Z" — not just a label.
-  - duration_messages: Approximate user messages this stage covers.
-
-The sum of all duration_messages should roughly equal the total user messages found in Step 2.`,
+THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (parallel) → publish. Not 10+.`,
         inputSchema: {
           title: z.string().describe("Compelling blog-style post title"),
           hook: z
