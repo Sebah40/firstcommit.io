@@ -42,6 +42,16 @@ const es: Record<TranslationKey, string> = {
   "sidebar.recent": "Recientes",
   "sidebar.saved": "Guardados",
   "sidebar.categories": "Categorías",
+  "sidebar.platformStats": "Estadísticas",
+  "sidebar.stories": "historias",
+  "sidebar.prompts": "prompts",
+  "sidebar.filesChanged": "archivos",
+  "sidebar.authors": "autores",
+  "sidebar.filterByTech": "Filtrar por tech",
+  "sidebar.mostPopular": "Más popular",
+  "sidebar.publishCta": "Comparte tu proyecto",
+  "sidebar.publishCtaDesc": "Decile a tu IA que publique y convierte tu sesión de código en una historia que otros pueden aprender.",
+  "sidebar.getStarted": "Empezar",
 
   // ── Categories ──
   "category.webApps": "Apps Web",

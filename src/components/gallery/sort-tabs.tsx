@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/use-translation";
 import type { SortOption } from "@/types";
 import type { TranslationKey } from "@/lib/i18n/locales/en";
+import { motion } from "framer-motion";
 
 interface SortTabsProps {
   active: SortOption;
@@ -21,20 +22,29 @@ export function SortTabs({ active, onChange }: SortTabsProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 rounded-full bg-muted/40 p-1">
       {TABS.map(({ value, labelKey, icon: Icon }) => (
         <button
           key={value}
           onClick={() => onChange(value)}
           className={cn(
-            "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+            "relative flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
             active === value
-              ? "bg-muted text-foreground"
-              : "text-muted-foreground hover:text-foreground"
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           )}
         >
-          <Icon size={14} />
-          {t(labelKey)}
+          {active === value && (
+            <motion.div
+              layoutId="activeTabIndicator"
+              className="absolute inset-0 rounded-full bg-background shadow-sm"
+              transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+            />
+          )}
+          <span className="relative z-10 flex items-center gap-1.5">
+            <Icon size={14} />
+            {t(labelKey)}
+          </span>
         </button>
       ))}
     </div>

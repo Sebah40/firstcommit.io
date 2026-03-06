@@ -13,21 +13,30 @@ export function HomeHeader({ query, count }: HomeHeaderProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, staggerChildren: 0.1 }}
     >
-      <h1 className="text-3xl font-bold tracking-tight text-foreground">
+      <motion.h1 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent"
+      >
         {query ? t("gallery.resultsFor", { query }) : t("gallery.explore")}
-      </h1>
-      <p className="mt-2 text-base text-muted-foreground max-w-xl">
+      </motion.h1>
+      <motion.p 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.4 }}
+        className="mt-2 text-base text-muted-foreground max-w-xl"
+      >
         {query
           ? t("gallery.guidesFound", {
             count,
             plural: count !== 1 ? "s" : "",
           })
           : t("gallery.subtitle")}
-      </p>
+      </motion.p>
     </motion.div>
   );
 }

@@ -40,6 +40,16 @@ const en = {
   "sidebar.recent": "Recent",
   "sidebar.saved": "Saved",
   "sidebar.categories": "Categories",
+  "sidebar.platformStats": "Platform stats",
+  "sidebar.stories": "stories",
+  "sidebar.prompts": "prompts",
+  "sidebar.filesChanged": "files changed",
+  "sidebar.authors": "authors",
+  "sidebar.filterByTech": "Filter by tech",
+  "sidebar.mostPopular": "Most popular",
+  "sidebar.publishCta": "Share your build",
+  "sidebar.publishCtaDesc": "Tell your AI to publish and it turns your coding session into a build story others can learn from.",
+  "sidebar.getStarted": "Get started",
 
   // ── Categories ──
   "category.webApps": "Web Apps",
