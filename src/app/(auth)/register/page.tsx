@@ -72,7 +72,7 @@ export default function RegisterPage() {
           <p className="mb-6 text-sm font-medium text-foreground">{email}</p>
           <div className="rounded-xl bg-surface border border-border/40 p-4">
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Click the link in your email to activate your account. Once confirmed, you can connect Claude Code and start publishing your build stories.
+              Click the link in your email to activate your account. Once confirmed, you can connect your AI coding tool and start publishing your build stories.
             </p>
           </div>
           <p className="mt-6 text-xs text-muted-foreground">
