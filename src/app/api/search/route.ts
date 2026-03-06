@@ -1,5 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { translateToEnglish } from "@/lib/translate";
+
+async function searchPosts(supabase: any, searchTerm: string, minQuality: string, limit: number) {
+  let query = supabase
+    .from("posts")
+    .select(`
+      *,
+      profile:profiles!posts_user_id_fkey(username)
+    `)
+    .eq("is_hidden", false)
+    .or(`title.ilike.${searchTerm},hook_description.ilike.${searchTerm},content.ilike.${searchTerm}`);
+
+  if (minQuality === "medium") {
+    query = query.or("likes_count.gte.2,saves_count.gte.1");
+  } else if (minQuality === "high") {
+    query = query.gte("likes_count", 5).gte("comments_count", 1);
+  }
+
+  query = query.order("trending_score", { ascending: false }).limit(limit);
+
+  const { data, error } = await query;
+  return { data: data ?? [], error };
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -12,37 +35,37 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = await createClient();
+  const trimmed = q.trim();
+  const searchTerm = `%${trimmed}%`;
 
-  const searchTerm = `%${q.trim()}%`;
+  // Translate query to English in parallel with original search
+  const englishPromise = translateToEnglish(trimmed);
+  const originalPromise = searchPosts(supabase, searchTerm, minQuality, limit);
 
-  let query = supabase
-    .from("posts")
-    .select(`
-      *,
-      profile:profiles!posts_user_id_fkey(username)
-    `)
-    .eq("is_hidden", false)
-    .or(`title.ilike.${searchTerm},hook_description.ilike.${searchTerm},content.ilike.${searchTerm}`);
+  const [englishQuery, originalResult] = await Promise.all([englishPromise, originalPromise]);
 
-  // Apply minimum quality thresholds
-  if (minQuality === "medium") {
-    query = query.or("likes_count.gte.2,saves_count.gte.1");
-  } else if (minQuality === "high") {
-    query = query.gte("likes_count", 5).gte("comments_count", 1);
+  if (originalResult.error) {
+    return NextResponse.json({ error: originalResult.error.message }, { status: 500 });
   }
 
-  query = query.order("trending_score", { ascending: false }).limit(limit);
+  let allPosts = originalResult.data;
 
-  const { data, error } = await query;
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  // If the translated query differs, search with that too and merge
+  if (englishQuery.toLowerCase() !== trimmed.toLowerCase()) {
+    const translatedTerm = `%${englishQuery}%`;
+    const { data: translatedData } = await searchPosts(supabase, translatedTerm, minQuality, limit);
+    const seen = new Set(allPosts.map((p: any) => p.id));
+    for (const post of translatedData) {
+      if (!seen.has(post.id)) {
+        allPosts.push(post);
+      }
+    }
   }
 
   const baseUrl = request.headers.get("host") ?? "localhost:3000";
   const protocol = baseUrl.includes("localhost") ? "http" : "https";
 
-  const results = (data ?? []).map((post: any) => ({
+  const results = allPosts.map((post: any) => ({
     id: post.id,
     title: post.title,
     description: post.hook_description,
