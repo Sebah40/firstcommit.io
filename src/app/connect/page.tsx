@@ -234,8 +234,8 @@ export default function ConnectPage() {
       <section className="relative overflow-hidden px-4 pt-16 pb-20 sm:px-6 sm:pt-24 sm:pb-28">
         {/* Background glow */}
         <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[500px] w-[800px] bg-accent/15 rounded-full blur-[120px]" />
-          <div className="absolute top-32 right-1/4 h-[200px] w-[400px] bg-violet-500/10 rounded-full blur-[80px]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-[radial-gradient(ellipse_at_center,var(--color-accent)_0%,transparent_70%)] opacity-15" />
+          <div className="absolute top-32 right-1/4 h-[200px] w-[400px] rounded-full bg-[radial-gradient(ellipse_at_center,var(--color-violet-500)_0%,transparent_70%)] opacity-10" />
         </div>
 
         <div className="mx-auto max-w-4xl">
