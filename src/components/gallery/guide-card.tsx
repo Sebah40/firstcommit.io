@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { formatNumber, formatRelativeTime, guideDetailPath } from "@/lib/utils";
 import { getTechColor } from "@/lib/utils/tech-icons";
 import { useTranslation } from "@/lib/i18n/use-translation";
+import { useTranslateTexts } from "@/hooks/use-translate";
 import { motion } from "framer-motion";
 import type { Guide } from "@/types";
 
@@ -15,6 +16,10 @@ interface GuideCardProps {
 
 export function GuideCard({ guide }: GuideCardProps) {
   const { t } = useTranslation();
+  const [trTitle, trSnippet] = useTranslateTexts([
+    guide.title,
+    guide.highlight_snippet ?? "",
+  ]);
 
   const item = {
     hidden: { opacity: 0 },
@@ -88,7 +93,7 @@ export function GuideCard({ guide }: GuideCardProps) {
 
           {/* Title */}
           <h3 className="mb-1.5 line-clamp-2 text-sm font-medium text-foreground">
-            {guide.title}
+            {trTitle}
           </h3>
 
           {/* Instance URL */}
@@ -122,7 +127,7 @@ export function GuideCard({ guide }: GuideCardProps) {
           {/* Highlight snippet */}
           {guide.highlight_snippet && (
             <p className="mb-2 line-clamp-2 text-xs italic text-muted-foreground/70">
-              &ldquo;{guide.highlight_snippet}&rdquo;
+              &ldquo;{trSnippet || guide.highlight_snippet}&rdquo;
             </p>
           )}
 

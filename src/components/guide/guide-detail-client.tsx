@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft, ExternalLink } from "lucide-react";
@@ -17,7 +17,8 @@ import {
 } from "@/lib/supabase/queries/guide-detail";
 import { formatRelativeTime } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/use-translation";
-import type { GuideDetail, Comment, Guide } from "@/types";
+import { useTranslateTexts } from "@/hooks/use-translate";
+import type { GuideDetail, Comment, Guide, PostStage } from "@/types";
 import type { User } from "@supabase/supabase-js";
 
 interface GuideDetailClientProps {
@@ -45,6 +46,43 @@ export function GuideDetailClient({
   const [following, setFollowing] = useState(false);
 
   const isOwner = !!user && user.id === guide.user_id;
+
+  // Collect all translatable post texts into one flat array
+  const translatableTexts = useMemo(() => {
+    const texts: string[] = [
+      guide.title ?? "",
+      guide.hook_description ?? "",
+    ];
+    if (guide.stages) {
+      for (const stage of guide.stages) {
+        texts.push(stage.stage_name ?? "");
+        texts.push(stage.summary ?? "");
+        for (const d of stage.key_decisions) texts.push(d);
+        for (const p of stage.problems_hit) texts.push(p);
+      }
+    }
+    return texts;
+  }, [guide.title, guide.hook_description, guide.stages]);
+
+  const translated = useTranslateTexts(translatableTexts);
+
+  // Reconstruct translated values
+  const translatedGuide = useMemo(() => {
+    let idx = 0;
+    const title = translated[idx++];
+    const hookDescription = translated[idx++];
+    let translatedStages: PostStage[] | undefined;
+    if (guide.stages) {
+      translatedStages = guide.stages.map((stage) => {
+        const stageName = translated[idx++];
+        const summary = translated[idx++];
+        const keyDecisions = stage.key_decisions.map(() => translated[idx++]);
+        const problemsHit = stage.problems_hit.map(() => translated[idx++]);
+        return { ...stage, stage_name: stageName, summary, key_decisions: keyDecisions, problems_hit: problemsHit };
+      });
+    }
+    return { title, hookDescription, stages: translatedStages };
+  }, [translated, guide.stages]);
 
   useEffect(() => {
     if (!user) return;
@@ -111,10 +149,10 @@ export function GuideDetailClient({
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             >
-              {guide.title}
+              {translatedGuide.title}
             </motion.h1>
             {guide.hook_description && (
-              <p className="mb-3 text-sm text-muted-foreground">{guide.hook_description}</p>
+              <p className="mb-3 text-sm text-muted-foreground">{translatedGuide.hookDescription}</p>
             )}
             <div className="flex flex-wrap items-center gap-2">
               {guide.instance_url && (
@@ -174,7 +212,7 @@ export function GuideDetailClient({
           {/* Stages timeline */}
           {guide.stages && guide.stages.length > 0 && (
             <div className="mb-8">
-              <StagesTimeline stages={guide.stages} />
+              <StagesTimeline stages={translatedGuide.stages ?? guide.stages} />
             </div>
           )}
 

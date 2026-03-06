@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { Search, LogOut, User, Terminal, Languages, UserPlus } from "lucide-react";
+import { LogOut, User, Terminal, Languages, UserPlus } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Avatar } from "@/components/ui/avatar";
 import { Logo } from "@/components/ui/logo";
@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/use-translation";
 import { LOCALES } from "@/lib/i18n";
 import { InviteModal } from "@/components/invite/invite-modal";
+import { SearchBar } from "@/components/layout/search-bar";
 
 export function Navbar() {
   const { user, profile, loading } = useAuth();
@@ -23,18 +24,6 @@ export function Navbar() {
   const langRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [searchValue, setSearchValue] = useState(searchParams.get("q") ?? "");
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = searchValue.trim();
-    if (trimmed) {
-      router.push(`/?q=${encodeURIComponent(trimmed)}`);
-    } else {
-      router.push("/");
-    }
-  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -63,19 +52,7 @@ export function Navbar() {
       </Link>
 
       {/* Center: Search */}
-      <form onSubmit={handleSearch} className="hidden max-w-md flex-1 px-8 md:block">
-        <div className="flex items-center gap-2 rounded-full bg-muted/50 px-4 py-2 focus-within:ring-2 focus-within:ring-accent/30 transition-shadow">
-          <Search size={16} className="text-muted-foreground" />
-          <input
-            name="search"
-            type="text"
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            placeholder={t("nav.searchPlaceholder")}
-            className="w-full bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground"
-          />
-        </div>
-      </form>
+      <SearchBar />
 
       {/* Right */}
       <div className="flex items-center gap-2">
