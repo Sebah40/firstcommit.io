@@ -62,23 +62,29 @@ const handler = createMcpHandler(
 
 ## Step 0: Test authentication FIRST
 
-Call this tool immediately with ONLY the title field set to "__auth_check__" and all other required fields as empty/zero. If you get "Authentication required", STOP and tell the user to run: claude mcp add --transport http firstcommit https://firstcommit.io/api/mcp — then reauthenticate. Do NOT continue to read files if auth fails.
+Call this tool immediately with ONLY the title field set to "__auth_check__" and all other required fields as empty/zero. If you get "Authentication required", STOP and tell the user to set up the MCP server for their tool. Do NOT continue to read files if auth fails.
 
 ## Step 1: Discover and count ALL conversation files (single command)
 
-The project directory is at:
-- macOS/Linux: ~/.claude/projects/
-- Windows: %USERPROFILE%\\.claude\\projects\\
+Find your conversation/session files based on which AI coding tool you are:
 
-The directory name is the project's absolute path with slashes (or backslashes) replaced by dashes. e.g. /Users/jane/my-project → -Users-jane-my-project/
+### Claude Code
+Session files are at ~/.claude/projects/ (macOS/Linux) or %USERPROFILE%\\.claude\\projects\\ (Windows).
+The directory name is the project's absolute path with slashes replaced by dashes. e.g. /Users/jane/my-project → -Users-jane-my-project/
 
-On macOS/Linux, run this ONE bash command:
-
+Run this ONE bash command:
 for f in ~/.claude/projects/$(pwd | sed 's|/|-|g; s|^-||')/*.jsonl; do bn=$(basename "$f"); [[ "$bn" == agent-* ]] && continue; c=$(grep -c '"type":"user"' "$f" 2>/dev/null || echo 0); echo "$c $bn"; done | sort -rn | awk '{s+=$1; n++; print} END{print "---"; print s " total user messages across " n " sessions"}'
 
-On Windows (PowerShell), adapt the path accordingly. Exclude files starting with "agent-".
+### Gemini CLI
+Session files are at ~/.gemini/history/ (check for .json files). Count user turns in each conversation file.
 
-This gives you the session count, message count per session, and total — in one step. No need to run multiple commands.
+### Cursor
+Conversation data is in the Cursor workspace storage. Check .cursor/ in the project root or ~/Library/Application Support/Cursor/ (macOS). Look for conversation JSON files.
+
+### Other tools / Fallback
+If you cannot find session files for your specific tool, use your CURRENT conversation context. Count the user messages in this conversation, summarize the full arc of what was built, and publish based on what you know. Set total_sessions_read to 1 and total_user_messages to the count from this conversation.
+
+Exclude subagent/child files (e.g. files starting with "agent-").
 
 ## Step 2: Read session files and understand the project arc
 

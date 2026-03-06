@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Terminal,
@@ -19,7 +19,12 @@ import { motion } from "framer-motion";
 import { useTranslation } from "@/lib/i18n/use-translation";
 import type { TranslationKey } from "@/lib/i18n/locales/en";
 
-const COMMAND = "claude mcp add --transport http firstcommit https://firstcommit.io/api/mcp";
+const SETUP_COMMANDS: { tool: string; command: string }[] = [
+  { tool: "Claude Code", command: "claude mcp add --transport http firstcommit https://firstcommit.io/api/mcp" },
+  { tool: "Codex", command: "codex mcp add firstcommit --url https://firstcommit.io/api/mcp" },
+  { tool: "Gemini CLI", command: "gemini mcp add -t http firstcommit https://firstcommit.io/api/mcp" },
+  { tool: "Cursor & Windsurf", command: 'npx mcp-add --name firstcommit --type remote --url https://firstcommit.io/api/mcp --clients "cursor,windsurf"' },
+];
 
 const tools: { name: string; descKey: TranslationKey; icon: typeof Upload }[] = [
   { name: "firstcommit_publish", descKey: "connect.toolPublish", icon: Upload },
@@ -51,6 +56,47 @@ function TypewriterText({ text, delay = 0 }: { text: string; delay?: number }) {
       {displayed.length < text.length && started && (
         <span className="animate-pulse text-accent">|</span>
       )}
+    </span>
+  );
+}
+
+const AI_TOOLS = ["Claude Code", "Codex", "Gemini CLI", "Cursor", "Windsurf"];
+
+function CyclingToolName() {
+  const [toolIndex, setToolIndex] = useState(0);
+  const [text, setText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const currentWord = AI_TOOLS[toolIndex];
+
+    if (deleting) {
+      if (text.length === 0) {
+        setDeleting(false);
+        setToolIndex((i) => (i + 1) % AI_TOOLS.length);
+        return;
+      }
+      const timeout = setTimeout(() => setText(text.slice(0, -1)), 40);
+      return () => clearTimeout(timeout);
+    }
+
+    if (text.length < currentWord.length) {
+      const timeout = setTimeout(
+        () => setText(currentWord.slice(0, text.length + 1)),
+        80 + Math.random() * 40
+      );
+      return () => clearTimeout(timeout);
+    }
+
+    // Pause at full word, then start deleting
+    const timeout = setTimeout(() => setDeleting(true), 2000);
+    return () => clearTimeout(timeout);
+  }, [text, deleting, toolIndex]);
+
+  return (
+    <span className="bg-gradient-to-r from-accent via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+      {text}
+      <span className="inline-block w-[3px] h-[0.75em] ml-0.5 align-middle bg-accent animate-[blink_1s_step-end_infinite]" />
     </span>
   );
 }
@@ -135,10 +181,38 @@ function TerminalDemo() {
 
 export default function ConnectPage() {
   const [copied, setCopied] = useState(false);
+  const [selectedTool, setSelectedTool] = useState(0);
+  const [toolMenuOpen, setToolMenuOpen] = useState(false);
+  const toolMenuRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
 
+  const currentCommand = SETUP_COMMANDS[selectedTool].command;
+
+  useEffect(() => {
+    if (!toolMenuOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (toolMenuRef.current && !toolMenuRef.current.contains(e.target as Node)) {
+        setToolMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [toolMenuOpen]);
+
   async function handleCopy() {
-    await navigator.clipboard.writeText(COMMAND);
+    try {
+      await navigator.clipboard.writeText(currentCommand);
+    } catch {
+      // Fallback for unfocused document
+      const ta = document.createElement("textarea");
+      ta.value = currentCommand;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -171,9 +245,7 @@ export default function ConnectPage() {
 
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
               {t("connect.heroTitle")}{" "}
-              <span className="bg-gradient-to-r from-accent via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                {t("connect.heroHighlight")}
-              </span>
+              <CyclingToolName />
             </h1>
 
             <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto sm:text-xl">
@@ -203,11 +275,46 @@ export default function ConnectPage() {
             {t("connect.getStarted")}
           </h2>
 
-          <div className="rounded-xl bg-[#0a0a0a] border border-white/[0.06] p-4 shadow-lg">
-            <div className="flex items-center justify-between gap-3">
+          <div className="rounded-xl bg-[#0a0a0a] border border-white/[0.06] shadow-lg">
+            {/* Tool selector */}
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/[0.06] rounded-t-xl">
+              <div className="relative" ref={toolMenuRef}>
+                <button
+                  onClick={() => setToolMenuOpen(!toolMenuOpen)}
+                  className="flex items-center gap-1.5 rounded-lg bg-white/[0.08] px-3 py-1.5 text-xs font-medium text-white hover:bg-white/[0.12] transition-colors"
+                >
+                  {SETUP_COMMANDS[selectedTool].tool}
+                  <svg width="10" height="6" viewBox="0 0 10 6" className="ml-1 text-neutral-400">
+                    <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                {toolMenuOpen && (
+                  <div className="absolute top-full left-0 mt-1 z-10 min-w-[160px] rounded-lg bg-[#1a1a1a] border border-white/[0.1] py-1 shadow-xl">
+                    {SETUP_COMMANDS.map((cmd, i) => (
+                      <button
+                        key={cmd.tool}
+                        onClick={() => { setSelectedTool(i); setToolMenuOpen(false); setCopied(false); }}
+                        className={`flex w-full items-center px-3 py-2 text-xs transition-colors ${
+                          i === selectedTool
+                            ? "text-accent bg-accent/10"
+                            : "text-neutral-300 hover:bg-white/[0.06]"
+                        }`}
+                      >
+                        {cmd.tool}
+                        {i === selectedTool && <Check size={12} className="ml-auto" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <span className="text-xs text-neutral-500">setup command</span>
+            </div>
+
+            {/* Command */}
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
               <code className="flex-1 overflow-x-auto text-sm text-green-400 font-mono whitespace-nowrap scrollbar-none">
                 <span className="text-neutral-500 select-none">$ </span>
-                {COMMAND}
+                {currentCommand}
               </code>
               <button
                 onClick={handleCopy}
