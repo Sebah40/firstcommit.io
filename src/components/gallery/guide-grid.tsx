@@ -32,26 +32,11 @@ export function GuideGrid({ guides }: GuideGridProps) {
     );
   }
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08,
-      },
-    },
-  };
-
   return (
-    <motion.div
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
-    >
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {guides.map((guide) => (
         <GuideCard key={guide.id} guide={guide} />
       ))}
-    </motion.div>
+    </div>
   );
 }

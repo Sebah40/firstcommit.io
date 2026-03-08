@@ -32,26 +32,11 @@ export function GuideFeed({ guides }: GuideFeedProps) {
         );
     }
 
-    const container = {
-        hidden: { opacity: 0 },
-        show: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-            },
-        },
-    };
-
     return (
-        <motion.div
-            variants={container}
-            initial="hidden"
-            animate="show"
-            className="mx-auto max-w-3xl space-y-6"
-        >
+        <div className="mx-auto max-w-3xl space-y-6">
             {guides.map((guide) => (
                 <GuideFeedCard key={guide.id} guide={guide} />
             ))}
-        </motion.div>
+        </div>
     );
 }
