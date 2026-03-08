@@ -1,20 +1,34 @@
 import { unstable_cache } from "next/cache";
+import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Guide } from "@/types";
 import { translateToEnglish } from "@/lib/translate";
 
+// Lightweight client for public reads — no cookies, fully cacheable
+function getReadClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
+
+// Select only the columns the feed/grid actually needs (skip full content body)
+const FEED_COLUMNS = `
+  id, title, hook_description, techs, likes_count, saves_count, comments_count,
+  trending_score, is_hidden, created_at, updated_at, difficulty, guide_type,
+  message_count, files_changed, highlight_snippet, instance_url, user_id,
+  profile:profiles!posts_user_id_fkey(username, display_name, avatar_url),
+  media:post_media(id, url, type, "order")
+`;
+
 async function _fetchGuides(
-  supabase: SupabaseClient,
   sort: string,
   search?: string
 ): Promise<Guide[]> {
+  const supabase = getReadClient();
   let query = supabase
     .from("posts")
-    .select(`
-      *,
-      profile:profiles!posts_user_id_fkey(*),
-      media:post_media(*)
-    `)
+    .select(FEED_COLUMNS)
     .eq("is_hidden", false);
 
   if (search) {
@@ -44,21 +58,24 @@ async function _fetchGuides(
   return data as unknown as Guide[];
 }
 
+const cachedFetchGuides = unstable_cache(
+  (sort: string) => _fetchGuides(sort),
+  ["guides"],
+  { revalidate: 60, tags: ["guides"] }
+);
+
 export async function fetchGuidesServer(
   supabase: SupabaseClient,
   sort: string = "trending",
   search?: string
 ): Promise<Guide[]> {
   if (search) {
-    // Translate the query to English so it matches English content in the DB
     const englishSearch = await translateToEnglish(search);
-    // Search with both original and translated terms for best coverage
     if (englishSearch.toLowerCase() !== search.toLowerCase()) {
       const [origResults, transResults] = await Promise.all([
-        _fetchGuides(supabase, sort, search),
-        _fetchGuides(supabase, sort, englishSearch),
+        _fetchGuides(sort, search),
+        _fetchGuides(sort, englishSearch),
       ]);
-      // Merge and deduplicate
       const seen = new Set<string>();
       const merged: Guide[] = [];
       for (const g of [...transResults, ...origResults]) {
@@ -69,14 +86,8 @@ export async function fetchGuidesServer(
       }
       return merged;
     }
-    return _fetchGuides(supabase, sort, search);
+    return _fetchGuides(sort, search);
   }
 
-  const cached = unstable_cache(
-    () => _fetchGuides(supabase, sort),
-    [`guides-${sort}`],
-    { revalidate: 60, tags: ["guides"] }
-  );
-
-  return cached();
+  return cachedFetchGuides(sort);
 }
