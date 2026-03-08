@@ -7,7 +7,6 @@ import { formatNumber, formatRelativeTime, guideDetailPath } from "@/lib/utils";
 import { getTechColor } from "@/lib/utils/tech-icons";
 import { useTranslation } from "@/lib/i18n/use-translation";
 import { useTranslateTexts } from "@/hooks/use-translate";
-import { motion } from "framer-motion";
 import type { Guide } from "@/types";
 
 interface GuideCardProps {
@@ -21,15 +20,9 @@ export function GuideCard({ guide }: GuideCardProps) {
     guide.highlight_snippet ?? "",
   ]);
 
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-  };
-
   return (
     <Link href={guideDetailPath(guide.id, guide.title)} className="group block">
-      <motion.article
-        variants={item}
+      <article
         className="overflow-hidden rounded-xl bg-surface shadow-sm border border-border/40 transition-all duration-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/5 hover:border-accent/50"
       >
         {/* Thumbnail */}
@@ -146,7 +139,7 @@ export function GuideCard({ guide }: GuideCardProps) {
             </span>
           </div>
         </div>
-      </motion.article>
+      </article>
     </Link>
   );
 }

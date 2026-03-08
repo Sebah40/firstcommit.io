@@ -7,7 +7,6 @@ import { formatNumber, formatRelativeTime, guideDetailPath } from "@/lib/utils";
 import { getTechColor } from "@/lib/utils/tech-icons";
 import { useTranslation } from "@/lib/i18n/use-translation";
 import { useTranslateTexts } from "@/hooks/use-translate";
-import { motion } from "framer-motion";
 import type { Guide } from "@/types";
 
 interface GuideFeedCardProps {
@@ -24,14 +23,8 @@ export function GuideFeedCard({ guide }: GuideFeedCardProps) {
 
     const bodySnippet = trHook || guide.hook_description || trSnippet || guide.highlight_snippet;
 
-    const item = {
-        hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
-    };
-
     return (
-        <motion.article
-            variants={item}
+        <article
             className="group overflow-hidden rounded-xl bg-surface shadow-sm border border-border/40 transition-all duration-300 hover:shadow-md hover:border-accent/40 mb-6"
         >
             <div className="p-4 sm:p-5">
@@ -173,6 +166,6 @@ export function GuideFeedCard({ guide }: GuideFeedCardProps) {
                     </button>
                 </div>
             </div>
-        </motion.article>
+        </article>
     );
 }

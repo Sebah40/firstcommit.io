@@ -30,6 +30,9 @@ export function Navbar() {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
       }
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -56,13 +59,40 @@ export function Navbar() {
 
       {/* Right */}
       <div className="flex items-center gap-2">
-        <button
-          onClick={() => setLangOpen(true)}
-          className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
-          title={t("nav.language")}
-        >
-          <Languages size={18} />
-        </button>
+        <div className="relative" ref={langRef}>
+          <button
+            onClick={() => setLangOpen(!langOpen)}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+            title={t("nav.language")}
+          >
+            <Languages size={18} />
+          </button>
+
+          {langOpen && (
+            <div className="absolute right-0 mt-2 w-44 z-[60] rounded-xl bg-surface p-1 shadow-lg ring-1 ring-black/5 dark:ring-white/5">
+              {LOCALES.map((loc) => (
+                <button
+                  key={loc.value}
+                  onClick={() => {
+                    setLocale(loc.value);
+                    setLangOpen(false);
+                  }}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    locale === loc.value
+                      ? "bg-accent/10 text-accent"
+                      : "text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+                  )}
+                >
+                  {loc.label}
+                  {locale === loc.value && (
+                    <span className="ml-auto text-accent">&#10003;</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <ThemeToggle />
 
         {/* CTA — always visible */}
@@ -146,40 +176,6 @@ export function Navbar() {
         />
       )}
 
-      {/* Language modal */}
-      {langOpen && (
-        <div
-          ref={langRef}
-          onClick={(e) => e.target === langRef.current && setLangOpen(false)}
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4"
-        >
-          <div className="w-full max-w-xs rounded-2xl bg-surface p-5">
-            <h3 className="mb-4 text-lg font-semibold text-foreground">{t("nav.language")}</h3>
-            <div className="flex flex-col gap-1">
-              {LOCALES.map((loc) => (
-                <button
-                  key={loc.value}
-                  onClick={() => {
-                    setLocale(loc.value);
-                    setLangOpen(false);
-                  }}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                    locale === loc.value
-                      ? "bg-accent/10 text-accent"
-                      : "text-muted-foreground hover:bg-surface-hover hover:text-foreground"
-                  )}
-                >
-                  {loc.label}
-                  {locale === loc.value && (
-                    <span className="ml-auto text-accent">&#10003;</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 }
