@@ -113,6 +113,24 @@ export function ProfileHeader({ profile, isOwner, onProfileUpdate }: ProfileHead
     const updated = await updateProfile(profile.id, { cv_url: urlData.publicUrl });
 
     if (updated) onProfileUpdate(updated);
+
+    // Parse PDF into structured resume data
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const parseResp = await fetch("/api/resume/parse", { method: "POST", body: formData });
+      if (parseResp.ok) {
+        const { resume_data } = await parseResp.json();
+        if (resume_data) {
+          const withResume = await updateProfile(profile.id, {
+            resume_data,
+            resume_updated_at: new Date().toISOString(),
+          });
+          if (withResume) onProfileUpdate(withResume);
+        }
+      }
+    } catch { /* parsing is best-effort */ }
+
     setUploadingCv(false);
   }
 
@@ -328,8 +346,17 @@ export function ProfileHeader({ profile, isOwner, onProfileUpdate }: ProfileHead
                   {formatJoinDate(profile.created_at)}
                 </span>
               </div>
-              {(profile.github_url || profile.linkedin_url || profile.cv_url) && (
+              {(profile.github_url || profile.linkedin_url || profile.cv_url || profile.resume_data) && (
                 <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {profile.resume_data && (
+                    <a
+                      href={`/resume/${profile.username}`}
+                      className="flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1.5 text-sm font-medium text-accent transition-colors hover:bg-accent/20"
+                    >
+                      <FileText size={16} />
+                      {t("profile.resume")}
+                    </a>
+                  )}
                   {profile.github_url && (
                     <a
                       href={profile.github_url}
