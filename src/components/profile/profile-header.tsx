@@ -5,7 +5,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { formatNumber, formatJoinDate } from "@/lib/utils";
 import { updateProfile } from "@/lib/supabase/queries/profile";
 import { createClient } from "@/lib/supabase/client";
-import { Star, Calendar, Pencil, X, Check, Github, Linkedin, Camera, FileText, Upload, Trash2 } from "lucide-react";
+import { Star, Calendar, Pencil, X, Check, Github, Linkedin, Camera, FileText, Upload, Trash2, Sparkles } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/use-translation";
 import type { Profile } from "@/types";
 
@@ -351,10 +351,10 @@ export function ProfileHeader({ profile, isOwner, onProfileUpdate }: ProfileHead
                   {profile.resume_data && (
                     <a
                       href={`/resume/${profile.username}`}
-                      className="flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1.5 text-sm font-medium text-accent transition-colors hover:bg-accent/20"
+                      className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-violet-500 px-3.5 py-1.5 text-sm font-semibold text-white shadow-[0_0_12px_rgba(99,102,241,0.3)] transition-all hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-[1.03]"
                     >
-                      <FileText size={16} />
-                      {t("profile.resume")}
+                      <Sparkles size={14} />
+                      Living Resume
                     </a>
                   )}
                   {profile.github_url && (
