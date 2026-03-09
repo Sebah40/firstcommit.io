@@ -661,27 +661,10 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
         // Get all published guides
         const { data: guides } = await supabase
           .from("posts")
-          .select("id, title, hook_description, techs, message_count, created_at")
+          .select("id, title, hook_description, techs, created_at")
           .eq("user_id", userId)
           .eq("is_hidden", false)
           .order("created_at", { ascending: false });
-
-        // Get stages for each guide
-        const guideIds = (guides ?? []).map((g: any) => g.id);
-        const { data: allStages } = guideIds.length > 0
-          ? await supabase
-              .from("post_stages")
-              .select("post_id, stage_name, summary, key_decisions, problems_hit")
-              .in("post_id", guideIds)
-              .order("stage_order", { ascending: true })
-          : { data: [] };
-
-        const stagesByPost = new Map<string, any[]>();
-        for (const s of allStages ?? []) {
-          const list = stagesByPost.get(s.post_id) ?? [];
-          list.push(s);
-          stagesByPost.set(s.post_id, list);
-        }
 
         const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -690,15 +673,8 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
           title: g.title,
           hook: g.hook_description,
           techs: g.techs,
-          message_count: g.message_count,
           published: g.created_at,
           url: `${baseUrl}/guide/${g.id}/${slugify(g.title)}`,
-          stages: (stagesByPost.get(g.id) ?? []).map((s: any) => ({
-            name: s.stage_name,
-            summary: s.summary,
-            key_decisions: s.key_decisions,
-            problems_hit: s.problems_hit,
-          })),
         }));
 
         const result: Record<string, unknown> = {
