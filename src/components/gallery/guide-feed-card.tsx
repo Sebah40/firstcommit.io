@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Heart, MessageCircle, Bookmark, MessageSquare, FileCode, ExternalLink } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { formatNumber, formatRelativeTime, guideDetailPath } from "@/lib/utils";
@@ -11,9 +12,10 @@ import type { Guide } from "@/types";
 
 interface GuideFeedCardProps {
     guide: Guide;
+    priority?: boolean;
 }
 
-export function GuideFeedCard({ guide }: GuideFeedCardProps) {
+export function GuideFeedCard({ guide, priority }: GuideFeedCardProps) {
     const { t } = useTranslation();
     const [trTitle, trHook, trSnippet] = useTranslateTexts([
         guide.title,
@@ -115,11 +117,14 @@ export function GuideFeedCard({ guide }: GuideFeedCardProps) {
             {/* Media / Image */}
             {guide.media && guide.media.length > 0 && (
                 <Link href={guideDetailPath(guide.id, guide.title)} className="block w-full overflow-hidden bg-muted">
-                    <img
+                    <Image
                         src={guide.media[0].url}
                         alt={guide.title}
+                        width={720}
+                        height={400}
                         className="w-full max-h-[500px] object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-                        loading="lazy"
+                        priority={priority}
+                        sizes="(max-width: 768px) 100vw, 720px"
                     />
                 </Link>
             )}
