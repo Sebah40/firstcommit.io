@@ -449,6 +449,80 @@ export default function ConnectPage() {
         </div>
       </section>
 
+      {/* Living Resume */}
+      <section className="px-4 sm:px-6 pb-24">
+        <div className="mx-auto max-w-4xl">
+          <div className="relative rounded-2xl border border-accent/20 overflow-hidden">
+            {/* Background glow */}
+            <div className="absolute inset-0 -z-10 bg-gradient-to-br from-accent/[0.07] via-transparent to-fuchsia-500/[0.07]" />
+
+            <div className="p-8 sm:p-12">
+              <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent mb-5">
+                <FileText size={12} />
+                Living Resume
+              </div>
+
+              <h2 className="text-2xl font-bold text-foreground sm:text-3xl mb-3">
+                {t("connect.livingResumeTitle" as TranslationKey)}
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mb-10 text-lg">
+                {t("connect.livingResumeDesc" as TranslationKey)}
+              </p>
+
+              <div className="grid gap-6 sm:grid-cols-3">
+                {[
+                  {
+                    icon: MessageSquare,
+                    titleKey: "connect.livingResumeFeature1Title" as TranslationKey,
+                    descKey: "connect.livingResumeFeature1Desc" as TranslationKey,
+                    color: "from-accent to-violet-500",
+                  },
+                  {
+                    icon: FileText,
+                    titleKey: "connect.livingResumeFeature2Title" as TranslationKey,
+                    descKey: "connect.livingResumeFeature2Desc" as TranslationKey,
+                    color: "from-emerald-500 to-green-600",
+                  },
+                  {
+                    icon: Check,
+                    titleKey: "connect.livingResumeFeature3Title" as TranslationKey,
+                    descKey: "connect.livingResumeFeature3Desc" as TranslationKey,
+                    color: "from-fuchsia-500 to-pink-500",
+                  },
+                ].map((item, i) => (
+                  <motion.div
+                    key={item.titleKey}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.1 * i }}
+                  >
+                    <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br ${item.color} mb-3`}>
+                      <item.icon size={16} className="text-white" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground mb-1">
+                      {t(item.titleKey)}
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {t(item.descKey)}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="mt-10">
+                <Link
+                  href="/resume/sebah40"
+                  className="inline-flex items-center gap-2 rounded-full bg-accent/10 border border-accent/20 px-5 py-2.5 text-sm font-medium text-accent hover:bg-accent/20 transition-colors"
+                >
+                  {t("connect.livingResumeCta" as TranslationKey)}
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Available tools */}
       <section className="px-4 sm:px-6 pb-24">
         <div className="mx-auto max-w-2xl">
