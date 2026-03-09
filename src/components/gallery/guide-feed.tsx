@@ -34,8 +34,8 @@ export function GuideFeed({ guides }: GuideFeedProps) {
 
     return (
         <div className="mx-auto max-w-3xl space-y-6">
-            {guides.map((guide) => (
-                <GuideFeedCard key={guide.id} guide={guide} />
+            {guides.map((guide, i) => (
+                <GuideFeedCard key={guide.id} guide={guide} priority={i === 0} />
             ))}
         </div>
     );
