@@ -632,7 +632,13 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
       "firstcommit_read_resume",
       {
         title: "Read Resume & Guides",
-        description: `Read your current resume data and all your published guides. Returns your structured resume JSON (or raw PDF text if the resume hasn't been structured yet) plus a summary of every guide you've published (title, hook, techs, stages, message count). Use this before calling firstcommit_update_resume to see what data is available. If resume_data contains a _raw_text field, it means the user uploaded a PDF but it hasn't been structured yet — use that text to build the structured resume. Requires authentication.`,
+        description: `Read your current resume data and published guides. Requires authentication.
+
+Returns:
+- resume_data: The user's REAL resume (work history, education, skills, etc.) — this is their actual CV. If it contains a _raw_text field, the user uploaded a PDF that hasn't been structured yet — use that text to build the structured version.
+- published_guides: List of guides the user published on First Commit (id, title, hook, techs). These can optionally become "Projects" on the resume if the user wants.
+
+IMPORTANT: resume_data contains real personal data (jobs, degrees, contact info). It must NEVER be discarded or overwritten carelessly. Always read this before calling firstcommit_update_resume.`,
         inputSchema: {},
       },
       async (_args, extra) => {
@@ -704,19 +710,21 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
         title: "Update Resume",
         description: `Update your living resume on First Commit. Requires authentication.
 
-IMPORTANT: Before calling this tool, you MUST:
-1. Call firstcommit_read_resume to get the current resume data and published guides
-2. Merge the existing resume with data from published guides
-3. ASK the user to confirm the changes before calling this tool
+## Required steps — do ALL of these before calling this tool:
 
-Rules for generating resume content:
+1. Call firstcommit_read_resume to get the current resume_data and published guides.
+2. READ the existing resume_data carefully. It contains the user's real work history, education, skills, and contact info. If resume_data has a _raw_text field, parse it into structured sections.
+3. ASK the user: "How do you want your resume to look? Any sections to emphasize, tone preferences, or guides you want included as projects?"
+4. ASK the user which published guides (if any) they want added as projects. Do NOT add all guides automatically.
+5. Show the user a summary of what you plan to write and get confirmation before calling this tool.
+
+## Rules:
+
+- NEVER drop existing data. Every work entry, education entry, skill, and contact field from the current resume_data MUST appear in your update. You are adding to and refining the resume, not replacing it.
 - NEVER invent or embellish. Only use facts from the existing resume and published guides.
-- Pull real details from guides: actual tech stacks, actual problems solved, actual scale.
-- Write like a human. No "leveraged", "utilized", "spearheaded", "passionate about", "driven individual". Just say what was built and what it does.
-- Preserve everything from the original resume (education, work experience, contact info).
-- For projects: merge existing resume projects with firstcommit guides. Don't duplicate — if a guide matches an existing project, update it with richer detail.
-- Respect the user's style_instructions if they provide any.
-- For each project from a guide, include the guide_id field so the website can link to it.
+- Write like a human. No "leveraged", "utilized", "spearheaded", "passionate about", "driven individual".
+- For guide-based projects: include the guide_id field so the website can link to the full build story.
+- Respect the user's style_instructions if set.
 
 The resume renders at firstcommit.io/resume/{username} in Harvard format.`,
         inputSchema: {
