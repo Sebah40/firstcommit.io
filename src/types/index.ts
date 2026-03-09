@@ -1,5 +1,66 @@
 export type UserRole = "user" | "admin";
 
+export interface ResumeBasics {
+  name: string;
+  label?: string;
+  email?: string;
+  phone?: string;
+  url?: string;
+  location?: { city?: string; region?: string; country?: string };
+  summary?: string;
+  picture_url?: string;
+}
+
+export interface ResumeData {
+  basics: ResumeBasics;
+  education: Array<{
+    institution: string;
+    area: string;
+    studyType?: string;
+    startDate?: string;
+    endDate?: string;
+    gpa?: string;
+    honors?: string[];
+    courses?: string[];
+  }>;
+  work: Array<{
+    company: string;
+    position: string;
+    startDate?: string;
+    endDate?: string;
+    summary?: string;
+    highlights?: string[];
+  }>;
+  skills: Array<{
+    name: string;
+    keywords: string[];
+  }>;
+  projects?: Array<{
+    name: string;
+    description?: string;
+    url?: string;
+    guide_id?: string;
+    techs?: string[];
+    highlights?: string[];
+    startDate?: string;
+    endDate?: string;
+  }>;
+  certifications?: Array<{
+    name: string;
+    issuer?: string;
+    date?: string;
+    url?: string;
+  }>;
+  languages?: Array<{
+    language: string;
+    fluency?: string;
+  }>;
+  custom_sections?: Array<{
+    title: string;
+    items: string[];
+  }>;
+}
+
 export interface Profile {
   id: string;
   username: string;
@@ -13,6 +74,9 @@ export interface Profile {
   github_url: string | null;
   linkedin_url: string | null;
   cv_url: string | null;
+  resume_data: ResumeData | null;
+  resume_style_instructions: string | null;
+  resume_updated_at: string | null;
   followers_count: number;
   following_count: number;
   created_at: string;

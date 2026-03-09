@@ -627,6 +627,232 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
       }
     );
 
+    // ── firstcommit_read_resume ─────────────────────────────────
+    server.registerTool(
+      "firstcommit_read_resume",
+      {
+        title: "Read Resume & Guides",
+        description: `Read your current resume data and all your published guides. Returns your structured resume JSON (or raw PDF text if the resume hasn't been structured yet) plus a summary of every guide you've published (title, hook, techs, stages, message count). Use this before calling firstcommit_update_resume to see what data is available. If resume_data contains a _raw_text field, it means the user uploaded a PDF but it hasn't been structured yet — use that text to build the structured resume. Requires authentication.`,
+        inputSchema: {},
+      },
+      async (_args, extra) => {
+        const userId = (extra.authInfo?.extra as { userId?: string })?.userId;
+        if (!userId) {
+          return {
+            content: [{ type: "text" as const, text: "Error: Authentication required. Run `claude mcp add --transport http firstcommit https://firstcommit.io/api/mcp` and sign in first." }],
+          };
+        }
+
+        const supabase = getSupabase();
+
+        // Get profile with resume data
+        const { data: profile, error: profileErr } = await supabase
+          .from("profiles")
+          .select("username, display_name, resume_data, resume_style_instructions, resume_updated_at, github_url, linkedin_url, avatar_url")
+          .eq("id", userId)
+          .single();
+
+        if (profileErr || !profile) {
+          return {
+            content: [{ type: "text" as const, text: "Could not load your profile." }],
+          };
+        }
+
+        // Get all published guides
+        const { data: guides } = await supabase
+          .from("posts")
+          .select("id, title, hook_description, techs, message_count, created_at")
+          .eq("user_id", userId)
+          .eq("is_hidden", false)
+          .order("created_at", { ascending: false });
+
+        // Get stages for each guide
+        const guideIds = (guides ?? []).map((g: any) => g.id);
+        const { data: allStages } = guideIds.length > 0
+          ? await supabase
+              .from("post_stages")
+              .select("post_id, stage_name, summary, key_decisions, problems_hit")
+              .in("post_id", guideIds)
+              .order("stage_order", { ascending: true })
+          : { data: [] };
+
+        const stagesByPost = new Map<string, any[]>();
+        for (const s of allStages ?? []) {
+          const list = stagesByPost.get(s.post_id) ?? [];
+          list.push(s);
+          stagesByPost.set(s.post_id, list);
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+        const guideSummaries = (guides ?? []).map((g: any) => ({
+          id: g.id,
+          title: g.title,
+          hook: g.hook_description,
+          techs: g.techs,
+          message_count: g.message_count,
+          published: g.created_at,
+          url: `${baseUrl}/guide/${g.id}/${slugify(g.title)}`,
+          stages: (stagesByPost.get(g.id) ?? []).map((s: any) => ({
+            name: s.stage_name,
+            summary: s.summary,
+            key_decisions: s.key_decisions,
+            problems_hit: s.problems_hit,
+          })),
+        }));
+
+        const result: Record<string, unknown> = {
+          profile: {
+            username: profile.username,
+            display_name: profile.display_name,
+            github_url: profile.github_url,
+            linkedin_url: profile.linkedin_url,
+            avatar_url: profile.avatar_url,
+          },
+          resume_data: profile.resume_data ?? null,
+          resume_style_instructions: profile.resume_style_instructions ?? null,
+          resume_updated_at: profile.resume_updated_at ?? null,
+          published_guides: guideSummaries,
+        };
+
+        return {
+          content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        };
+      }
+    );
+
+    // ── firstcommit_update_resume ───────────────────────────────
+    server.registerTool(
+      "firstcommit_update_resume",
+      {
+        title: "Update Resume",
+        description: `Update your living resume on First Commit. Requires authentication.
+
+IMPORTANT: Before calling this tool, you MUST:
+1. Call firstcommit_read_resume to get the current resume data and published guides
+2. Merge the existing resume with data from published guides
+3. ASK the user to confirm the changes before calling this tool
+
+Rules for generating resume content:
+- NEVER invent or embellish. Only use facts from the existing resume and published guides.
+- Pull real details from guides: actual tech stacks, actual problems solved, actual scale.
+- Write like a human. No "leveraged", "utilized", "spearheaded", "passionate about", "driven individual". Just say what was built and what it does.
+- Preserve everything from the original resume (education, work experience, contact info).
+- For projects: merge existing resume projects with firstcommit guides. Don't duplicate — if a guide matches an existing project, update it with richer detail.
+- Respect the user's style_instructions if they provide any.
+- For each project from a guide, include the guide_id field so the website can link to it.
+
+The resume renders at firstcommit.io/resume/{username} in Harvard format.`,
+        inputSchema: {
+          resume_data: z.object({
+            basics: z.object({
+              name: z.string(),
+              label: z.string().optional(),
+              email: z.string().optional(),
+              phone: z.string().optional(),
+              url: z.string().optional(),
+              location: z.object({
+                city: z.string().optional(),
+                region: z.string().optional(),
+                country: z.string().optional(),
+              }).optional(),
+              summary: z.string().optional(),
+              picture_url: z.string().optional(),
+            }),
+            education: z.array(z.object({
+              institution: z.string(),
+              area: z.string(),
+              studyType: z.string().optional(),
+              startDate: z.string().optional(),
+              endDate: z.string().optional(),
+              gpa: z.string().optional(),
+              honors: z.array(z.string()).optional(),
+              courses: z.array(z.string()).optional(),
+            })),
+            work: z.array(z.object({
+              company: z.string(),
+              position: z.string(),
+              startDate: z.string().optional(),
+              endDate: z.string().optional(),
+              summary: z.string().optional(),
+              highlights: z.array(z.string()).optional(),
+            })),
+            skills: z.array(z.object({
+              name: z.string(),
+              keywords: z.array(z.string()),
+            })),
+            projects: z.array(z.object({
+              name: z.string(),
+              description: z.string().optional(),
+              url: z.string().optional(),
+              guide_id: z.string().optional(),
+              techs: z.array(z.string()).optional(),
+              highlights: z.array(z.string()).optional(),
+              startDate: z.string().optional(),
+              endDate: z.string().optional(),
+            })).optional(),
+            certifications: z.array(z.object({
+              name: z.string(),
+              issuer: z.string().optional(),
+              date: z.string().optional(),
+              url: z.string().optional(),
+            })).optional(),
+            languages: z.array(z.object({
+              language: z.string(),
+              fluency: z.string().optional(),
+            })).optional(),
+            custom_sections: z.array(z.object({
+              title: z.string(),
+              items: z.array(z.string()),
+            })).optional(),
+          }).describe("Full structured resume data"),
+          style_instructions: z.string().optional().describe("User's preferred style/tone for the resume (e.g., 'keep it concise', 'emphasize backend work')"),
+        },
+      },
+      async ({ resume_data, style_instructions }, extra) => {
+        const userId = (extra.authInfo?.extra as { userId?: string })?.userId;
+        if (!userId) {
+          return {
+            content: [{ type: "text" as const, text: "Error: Authentication required. Run `claude mcp add --transport http firstcommit https://firstcommit.io/api/mcp` and sign in first." }],
+          };
+        }
+
+        const supabase = getSupabase();
+
+        const update: Record<string, unknown> = {
+          resume_data,
+          resume_updated_at: new Date().toISOString(),
+        };
+        if (style_instructions !== undefined) {
+          update.resume_style_instructions = style_instructions;
+        }
+
+        const { error } = await supabase
+          .from("profiles")
+          .update(update)
+          .eq("id", userId);
+
+        if (error) {
+          return {
+            content: [{ type: "text" as const, text: `Error updating resume: ${error.message}` }],
+          };
+        }
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", userId)
+          .single();
+
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+        const resumeUrl = `${baseUrl}/resume/${profile?.username}`;
+
+        return {
+          content: [{ type: "text" as const, text: `Resume updated!\n\nView it at: ${resumeUrl}` }],
+        };
+      }
+    );
+
   },
   {},
   {

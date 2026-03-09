@@ -17,6 +17,8 @@ import {
   BookOpen,
   Pencil,
   Trash2,
+  FileText,
+  RefreshCw,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "@/lib/i18n/use-translation";
@@ -35,6 +37,8 @@ const tools: { name: string; descKey: TranslationKey; icon: typeof Upload }[] = 
   { name: "firstcommit_read", descKey: "connect.toolRead", icon: BookOpen },
   { name: "firstcommit_edit", descKey: "connect.toolEdit", icon: Pencil },
   { name: "firstcommit_delete", descKey: "connect.toolDelete", icon: Trash2 },
+  { name: "firstcommit_read_resume", descKey: "connect.toolReadResume", icon: FileText },
+  { name: "firstcommit_update_resume", descKey: "connect.toolUpdateResume", icon: RefreshCw },
 ];
 
 function TypewriterText({ text, delay = 0 }: { text: string; delay?: number }) {
