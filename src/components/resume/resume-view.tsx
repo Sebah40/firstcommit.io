@@ -45,7 +45,7 @@ export function ResumeView({ resumeData, username, displayName, avatarUrl, cvUrl
   const { basics, education, work, skills, projects, certifications, languages, custom_sections } = resumeData;
 
   return (
-    <div className="-mx-4 -my-6 sm:-mx-6 min-h-screen bg-neutral-100 print:bg-white">
+    <div className="-mx-4 -my-6 sm:-mx-6 min-h-screen bg-neutral-100 print:bg-white print:min-h-0 print:m-0">
       {/* Toolbar — hidden in print */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 bg-background print:hidden sm:px-6">
         <div className="flex items-center gap-3">

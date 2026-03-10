@@ -47,7 +47,7 @@ export function Navbar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 sm:px-6 glass border-b border-border/40">
+    <header className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 sm:px-6 glass border-b border-border/40 print:hidden">
       {/* Left: Logo */}
       <Link href="/" className="flex items-center gap-2">
         <Logo className="h-8 w-8" />
