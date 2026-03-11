@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { jwtVerify } from "jose";
 import { slugify } from "@/lib/utils";
 import { z } from "zod";
+import { generateResumePdf } from "@/lib/resume/generate-pdf";
 
 const TOKEN_SECRET = new TextEncoder().encode(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -654,7 +655,7 @@ IMPORTANT: resume_data contains real personal data (jobs, degrees, contact info)
         // Get profile with resume data
         const { data: profile, error: profileErr } = await supabase
           .from("profiles")
-          .select("username, display_name, resume_data, resume_style_instructions, resume_updated_at, github_url, linkedin_url, avatar_url")
+          .select("username, display_name, resume_data, resume_style_instructions, resume_updated_at, resume_pdf_url, resume_max_pages, github_url, linkedin_url, avatar_url")
           .eq("id", userId)
           .single();
 
@@ -694,6 +695,8 @@ IMPORTANT: resume_data contains real personal data (jobs, degrees, contact info)
           resume_data: profile.resume_data ?? null,
           resume_style_instructions: profile.resume_style_instructions ?? null,
           resume_updated_at: profile.resume_updated_at ?? null,
+          resume_pdf_url: profile.resume_pdf_url ?? null,
+          resume_max_pages: profile.resume_max_pages ?? 1,
           published_guides: guideSummaries,
         };
 
@@ -791,9 +794,10 @@ The resume renders at firstcommit.io/resume/{username} in Harvard format.`,
             })).optional(),
           }).describe("Full structured resume data"),
           style_instructions: z.string().optional().describe("User's preferred style/tone for the resume (e.g., 'keep it concise', 'emphasize backend work')"),
+          max_pages: z.number().int().min(1).max(4).optional().describe("Maximum number of pages for the PDF (default: 1). If the generated PDF exceeds this, the tool will report how many pages overflowed."),
         },
       },
-      async ({ resume_data, style_instructions }, extra) => {
+      async ({ resume_data, style_instructions, max_pages }, extra) => {
         const userId = (extra.authInfo?.extra as { userId?: string })?.userId;
         if (!userId) {
           return {
@@ -810,6 +814,9 @@ The resume renders at firstcommit.io/resume/{username} in Harvard format.`,
         if (style_instructions !== undefined) {
           update.resume_style_instructions = style_instructions;
         }
+        if (max_pages !== undefined) {
+          update.resume_max_pages = max_pages;
+        }
 
         const { error } = await supabase
           .from("profiles")
@@ -824,16 +831,30 @@ The resume renders at firstcommit.io/resume/{username} in Harvard format.`,
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("username")
+          .select("username, resume_max_pages")
           .eq("id", userId)
           .single();
 
         const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
         const resumeUrl = `${baseUrl}/resume/${profile?.username}`;
+        const effectiveMaxPages = max_pages ?? profile?.resume_max_pages ?? 1;
 
-        return {
-          content: [{ type: "text" as const, text: `Resume updated!\n\nView it at: ${resumeUrl}` }],
-        };
+        // Generate PDF and report overflow
+        try {
+          const pdf = await generateResumePdf(userId, resume_data, effectiveMaxPages);
+
+          let msg = `Resume updated and PDF generated!\n\nView it at: ${resumeUrl}\n\nPDF: ${pdf.pages} page(s) (limit: ${pdf.max_pages})`;
+          if (pdf.overflowed) {
+            msg += `\n\n⚠️ OVERFLOW: Resume is ${pdf.pages} pages but limit is ${pdf.max_pages}. Please trim ${pdf.overflow_pages} page(s) worth of content and call this tool again. Suggested areas to reduce: long bullet-point lists, verbose summaries, or lower-priority projects.`;
+          }
+
+          return { content: [{ type: "text" as const, text: msg }] };
+        } catch (pdfErr) {
+          // PDF generation failed — resume data is saved, just no PDF
+          return {
+            content: [{ type: "text" as const, text: `Resume data saved.\n\nView it at: ${resumeUrl}\n\n(PDF generation failed: ${pdfErr instanceof Error ? pdfErr.message : "unknown error"})` }],
+          };
+        }
       }
     );
 

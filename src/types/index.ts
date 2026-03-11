@@ -77,6 +77,8 @@ export interface Profile {
   resume_data: ResumeData | null;
   resume_style_instructions: string | null;
   resume_updated_at: string | null;
+  resume_pdf_url: string | null;
+  resume_max_pages: number;
   followers_count: number;
   following_count: number;
   created_at: string;

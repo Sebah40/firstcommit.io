@@ -111,13 +111,3 @@ html {
   transform: translateY(-2px);
 }
 
-/* Print: clean page with no browser chrome */
-@media print {
-  @page {
-    margin: 0.4in;
-  }
-
-  body {
-    background: white !important;
-  }
-}
