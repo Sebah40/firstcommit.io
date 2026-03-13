@@ -140,6 +140,33 @@ function Tag({ label, color }: { label: string; color: string }) {
   );
 }
 
+// Renders bullet text with URLs highlighted as teal links
+function BulletText({ text, style }: { text: string; style?: object }) {
+  const urlRe = /(?:https?:\/\/)?(?:[a-zA-Z0-9][-a-zA-Z0-9]*\.)+[a-zA-Z]{2,}\/[^\s]*/g;
+  const parts: Array<{ text: string; url?: string }> = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = urlRe.exec(text)) !== null) {
+    if (m.index > last) parts.push({ text: text.slice(last, m.index) });
+    const url = m[0].startsWith("http") ? m[0] : `https://${m[0]}`;
+    parts.push({ text: m[0], url });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push({ text: text.slice(last) });
+
+  return (
+    <Text style={{ ...s.bulletText, ...style }}>
+      {parts.map((p, i) =>
+        p.url ? (
+          <Link key={i} src={p.url} style={{ color: OWL.label, textDecoration: "none" }}>{p.text}</Link>
+        ) : (
+          <Text key={i}>{p.text}</Text>
+        )
+      )}
+    </Text>
+  );
+}
+
 export function ResumePdf({ data }: { data: ResumeData }) {
   const {
     basics,
@@ -193,7 +220,7 @@ export function ResumePdf({ data }: { data: ResumeData }) {
                 {job.highlights?.map((h, j) => (
                   <View key={j} style={s.bulletRow}>
                     <Text style={s.bulletMark}>›</Text>
-                    <Text style={s.bulletText}>{h}</Text>
+                    <BulletText text={h} />
                   </View>
                 ))}
               </View>
@@ -230,7 +257,7 @@ export function ResumePdf({ data }: { data: ResumeData }) {
                 {proj.highlights?.map((h, j) => (
                   <View key={j} style={s.bulletRow}>
                     <Text style={s.bulletMark}>›</Text>
-                    <Text style={s.bulletText}>{h}</Text>
+                    <BulletText text={h} />
                   </View>
                 ))}
               </View>
