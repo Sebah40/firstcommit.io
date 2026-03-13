@@ -282,7 +282,7 @@ export function ResumePdf({ data }: { data: ResumeData }) {
               <View key={i} style={{ ...s.entryRow, marginBottom: 4 }}>
                 <View style={s.entryLeft}>
                   {cert.url ? (
-                    <Link src={cert.url} style={{ ...s.position, color: OWL.teal, textDecoration: "none" }}>{cert.name}</Link>
+                    <Link src={cert.url} style={{ ...s.position, color: OWL.label, textDecoration: "none" }}>{cert.name}</Link>
                   ) : (
                     <Text style={s.position}>{cert.name}</Text>
                   )}
