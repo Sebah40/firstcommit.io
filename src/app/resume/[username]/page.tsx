@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fetchProfileByUsernameServer } from "@/lib/supabase/queries/profile.server";
+import { ResumePdfFrame } from "@/components/resume/resume-pdf-frame";
 import type { Metadata } from "next";
 import type { ResumeData } from "@/types";
 
@@ -49,11 +50,7 @@ export default async function ResumePage({ params }: ResumePageProps) {
       className="-mx-4 -my-6 sm:-mx-6"
       style={{ height: "calc(100vh - 3.5rem)" }}
     >
-      <iframe
-        src={`/api/resume/pdf/${username}`}
-        style={{ width: "100%", height: "100%", border: "none" }}
-        title="Resume"
-      />
+      <ResumePdfFrame src={`/api/resume/pdf/${username}`} />
     </div>
   );
 }
