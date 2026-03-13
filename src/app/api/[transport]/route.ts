@@ -835,7 +835,7 @@ The resume renders at firstcommit.io/resume/{username} in Harvard format.`,
           .eq("id", userId)
           .single();
 
-        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://firstcommit.io";
         const resumeUrl = `${baseUrl}/resume/${profile?.username}`;
         const effectiveMaxPages = max_pages ?? profile?.resume_max_pages ?? 1;
 
