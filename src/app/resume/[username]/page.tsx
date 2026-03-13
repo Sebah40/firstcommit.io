@@ -53,7 +53,6 @@ export default async function ResumePage({ params }: ResumePageProps) {
         src={`/api/resume/pdf/${username}`}
         style={{ width: "100%", height: "100%", border: "none" }}
         title="Resume"
-        sandbox="allow-scripts allow-same-origin allow-popups"
       />
     </div>
   );
