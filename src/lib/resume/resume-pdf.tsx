@@ -281,7 +281,11 @@ export function ResumePdf({ data }: { data: ResumeData }) {
             {certifications.map((cert, i) => (
               <View key={i} style={{ ...s.entryRow, marginBottom: 4 }}>
                 <View style={s.entryLeft}>
-                  <Text style={s.position}>{cert.name}</Text>
+                  {cert.url ? (
+                    <Link src={cert.url} style={{ ...s.position, color: OWL.teal, textDecoration: "none" }}>{cert.name}</Link>
+                  ) : (
+                    <Text style={s.position}>{cert.name}</Text>
+                  )}
                   {cert.issuer && <Text style={{ color: OWL.contact, fontSize: 9 }}>{cert.issuer}</Text>}
                 </View>
                 {cert.date && <Text style={s.dateText}>{fmtDate(cert.date)}</Text>}
