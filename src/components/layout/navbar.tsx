@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/use-translation";
 import { LOCALES } from "@/lib/i18n";
 import { InviteModal } from "@/components/invite/invite-modal";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { SearchBar } from "@/components/layout/search-bar";
 
 export function Navbar() {
@@ -106,6 +107,8 @@ export function Navbar() {
 
         {user ? (
           <>
+            <NotificationBell userId={user.id} />
+
             <button
               onClick={() => setInviteOpen(true)}
               className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"

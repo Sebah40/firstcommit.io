@@ -136,6 +136,12 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
             .describe(
               "The live URL where the project is deployed (e.g. https://myapp.com). Ask the user if they have one."
             ),
+          repo_url: z
+            .string()
+            .optional()
+            .describe(
+              "GitHub repository URL (e.g. https://github.com/user/project). Ask the user if they want to link their repo so others can build from it."
+            ),
           anonymous: z
             .boolean()
             .optional()
@@ -168,7 +174,7 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
             .describe("4-12 chronological project stages covering the FULL project history"),
         },
       },
-      async ({ title, hook, body, techs, total_sessions_read, total_user_messages, instance_url, anonymous, stages }, extra) => {
+      async ({ title, hook, body, techs, total_sessions_read, total_user_messages, instance_url, repo_url, anonymous, stages }, extra) => {
         const userId = (extra.authInfo?.extra as { userId?: string })?.userId;
 
         // Auth check shortcut
@@ -237,6 +243,7 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
           message_count: totalMessages,
         };
         if (instance_url) postInsert.instance_url = instance_url.trim();
+        if (repo_url) postInsert.repo_url = repo_url.trim();
         if (userId && !anonymous) postInsert.user_id = userId;
 
         const { data: post, error: postError } = (await supabase
@@ -394,7 +401,7 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
 
         const { data: post, error } = await supabase
           .from("posts")
-          .select("id, title, hook_description, content, techs, instance_url, message_count, files_changed, difficulty, guide_type, prerequisites, what_youll_build, is_vibe_coded, created_at, user_id, profile:profiles!posts_user_id_fkey(username)")
+          .select("id, title, hook_description, content, techs, instance_url, repo_url, message_count, files_changed, difficulty, guide_type, prerequisites, what_youll_build, is_vibe_coded, created_at, user_id, profile:profiles!posts_user_id_fkey(username)")
           .eq("id", post_id)
           .eq("is_hidden", false)
           .single();
@@ -423,6 +430,7 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
           `**Difficulty:** ${post.difficulty || "not set"}`,
           `**Messages:** ${post.message_count} | **Files changed:** ${post.files_changed}`,
           post.instance_url ? `**Live URL:** ${post.instance_url}` : null,
+          post.repo_url ? `**Repo:** ${post.repo_url}` : null,
           ``,
           `## Hook`,
           post.hook_description || "No hook description",
@@ -451,6 +459,125 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
       }
     );
 
+    // ── firstcommit_build ───────────────────────────────────────
+    server.registerTool(
+      "firstcommit_build",
+      {
+        title: "Build from Guide",
+        description: `Get a First Commit guide's full build approach to replicate or adapt the project.
+
+Returns the complete structured guide — stages, key decisions, problems hit, and the source repo URL — so you can build your own version guided by someone else's proven approach.
+
+## How to use this:
+
+1. Call this tool with a guide ID (from search results or a guide URL).
+2. Present the stages to the user: "This guide has N stages. What would you like to replicate or change?"
+3. The user picks which stages/approaches to follow and what to modify.
+4. If repo_url is provided, use your GitHub access (built-in or via GitHub MCP) to read the source files you need.
+5. Build the project locally, adapting the approach to the user's preferences.
+
+The guide provides the MAP (approach, decisions, pitfalls). The repo provides the TERRITORY (actual code). You combine both to build something new.`,
+        inputSchema: {
+          guide_id: z.string().describe("The guide UUID (from search results, a guide URL like firstcommit.io/guide/{id}/..., or a post_id)"),
+        },
+      },
+      async ({ guide_id }) => {
+        const supabase = getSupabase();
+
+        const { data: post, error } = await supabase
+          .from("posts")
+          .select("id, title, hook_description, content, techs, instance_url, repo_url, message_count, files_changed, difficulty, guide_type, prerequisites, what_youll_build, created_at, user_id, profile:profiles!posts_user_id_fkey(username, display_name)")
+          .eq("id", guide_id)
+          .eq("is_hidden", false)
+          .single();
+
+        if (error || !post) {
+          return {
+            content: [{ type: "text" as const, text: "Guide not found or has been deleted." }],
+          };
+        }
+
+        const { data: stages } = await supabase
+          .from("post_stages")
+          .select("stage_order, stage_name, summary, key_decisions, problems_hit, duration_messages")
+          .eq("post_id", guide_id)
+          .order("stage_order", { ascending: true });
+
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+        const postUrl = `${baseUrl}/guide/${post.id}/${slugify(post.title)}`;
+        const author = (post as any).profile?.display_name || (post as any).profile?.username || "anonymous";
+
+        const lines = [
+          `# Build from: ${post.title}`,
+          ``,
+          `**Author:** ${author}`,
+          `**Guide:** ${postUrl}`,
+          `**Techs:** ${post.techs?.join(", ") || "none"}`,
+          `**Scale:** ${post.message_count} prompts, ${post.files_changed} files changed`,
+          post.difficulty ? `**Difficulty:** ${post.difficulty}` : null,
+          post.instance_url ? `**Live demo:** ${post.instance_url}` : null,
+          post.repo_url ? `**Source repo:** ${post.repo_url}` : null,
+          ``,
+          `## What was built`,
+          post.hook_description || "",
+          ``,
+        ].filter(Boolean);
+
+        if (post.what_youll_build) {
+          lines.push(`## What you'll build`, post.what_youll_build, ``);
+        }
+        if (post.prerequisites?.length) {
+          lines.push(`## Prerequisites`, post.prerequisites.join(", "), ``);
+        }
+
+        if (post.content) {
+          lines.push(`## Full narrative`, post.content, ``);
+        }
+
+        if (stages?.length) {
+          lines.push(`## Build stages (${stages.length} total)`, ``);
+          for (const s of stages) {
+            lines.push(`### Stage ${s.stage_order}: ${s.stage_name}`);
+            lines.push(``);
+            lines.push(s.summary);
+            if (s.key_decisions?.length) {
+              lines.push(``);
+              lines.push(`**Key decisions:**`);
+              for (const d of s.key_decisions) {
+                lines.push(`- ${d}`);
+              }
+            }
+            if (s.problems_hit?.length) {
+              lines.push(``);
+              lines.push(`**Problems hit:**`);
+              for (const p of s.problems_hit) {
+                lines.push(`- ${p}`);
+              }
+            }
+            lines.push(``, `*~${s.duration_messages} prompts*`, ``);
+          }
+        }
+
+        if (post.repo_url) {
+          lines.push(
+            `---`,
+            ``,
+            `**Next step:** Use your GitHub access to browse ${post.repo_url} and read the source files relevant to the stages above. Ask the user which stages they want to replicate and what they want to change.`
+          );
+        } else {
+          lines.push(
+            `---`,
+            ``,
+            `**Note:** This guide doesn't have a linked source repo. You can still follow the approach described in the stages above to build your own version.`
+          );
+        }
+
+        return {
+          content: [{ type: "text" as const, text: lines.join("\n") }],
+        };
+      }
+    );
+
     // ── firstcommit_edit ────────────────────────────────────────
     server.registerTool(
       "firstcommit_edit",
@@ -464,6 +591,7 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
           body: z.string().optional().describe("New main content (markdown)"),
           techs: z.array(z.string()).optional().describe("New tech stack array"),
           instance_url: z.string().optional().describe("New live URL (empty string to remove)"),
+          repo_url: z.string().optional().describe("New GitHub repo URL (empty string to remove)"),
           stages: z
             .array(
               z.object({
@@ -478,7 +606,7 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
             .describe("Replace all stages with this new array (omit to keep existing stages)"),
         },
       },
-      async ({ post_id, title, hook, body, techs, instance_url, stages }, extra) => {
+      async ({ post_id, title, hook, body, techs, instance_url, repo_url, stages }, extra) => {
         const userId = (extra.authInfo?.extra as { userId?: string })?.userId;
         if (!userId) {
           return {
@@ -514,6 +642,7 @@ THE ENTIRE PUBLISH FLOW SHOULD TAKE 3 TOOL CALLS: auth check → gather + read (
         if (body !== undefined) update.content = body.trim();
         if (techs !== undefined) update.techs = techs;
         if (instance_url !== undefined) update.instance_url = instance_url.trim() || null;
+        if (repo_url !== undefined) update.repo_url = repo_url.trim() || null;
 
         if (Object.keys(update).length > 0) {
           const { error: updateErr } = await supabase

@@ -23,6 +23,16 @@ export const metadata: Metadata = {
   icons: {
     icon: "/icon.svg",
   },
+  metadataBase: new URL("https://firstcommit.io"),
+  alternates: {
+    types: {
+      "application/rss+xml": "/feed.xml",
+    },
+  },
+  openGraph: {
+    siteName: "First Commit",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

@@ -5,6 +5,7 @@ import { ProfileHeader } from "@/components/profile/profile-header";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
 import { GuideGrid } from "@/components/gallery/guide-grid";
 import { CommentList } from "@/components/profile/comment-list";
+import { ProfileEmptyState } from "@/components/profile/profile-empty-state";
 import {
   fetchUserComments,
   fetchUserLikedGuides,
@@ -98,6 +99,8 @@ export function ProfilePageClient({
         <div className="flex items-center justify-center py-20">
           <Loader2 size={24} className="animate-spin text-muted-foreground" />
         </div>
+      ) : currentData.length === 0 ? (
+        <ProfileEmptyState tab={effectiveTab} isOwner={isOwner} />
       ) : effectiveTab === "comments" ? (
         <CommentList comments={currentData as Comment[]} />
       ) : (

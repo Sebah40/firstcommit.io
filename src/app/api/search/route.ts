@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { translateToEnglish } from "@/lib/translate";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 async function searchPosts(supabase: any, searchTerm: string, minQuality: string, limit: number) {
   let query = supabase
@@ -25,6 +26,15 @@ async function searchPosts(supabase: any, searchTerm: string, minQuality: string
 }
 
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request);
+  const limit_result = rateLimit(`search:${ip}`, { max: 30, windowMs: 60_000 });
+  if (!limit_result.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(limit_result.retryAfterMs / 1000)) } }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q");
   const limit = Math.min(Number(searchParams.get("limit") ?? 10), 50);

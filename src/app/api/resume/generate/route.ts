@@ -1,9 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateResumePdf } from "@/lib/resume/generate-pdf";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import type { ResumeData } from "@/types";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  const limit_result = rateLimit(`resume-gen:${ip}`, { max: 5, windowMs: 60_000 });
+  if (!limit_result.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(limit_result.retryAfterMs / 1000)) } }
+    );
+  }
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 

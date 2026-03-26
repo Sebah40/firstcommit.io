@@ -18,8 +18,18 @@ const FEED_COLUMNS = `
   trending_score, is_hidden, created_at, updated_at, difficulty, guide_type,
   message_count, files_changed, highlight_snippet, instance_url, user_id,
   profile:profiles!posts_user_id_fkey(username, display_name, avatar_url),
-  media:post_media(id, url, type, "order")
+  media:post_media(id, url, type, "order"),
+  stages:post_stages(id)
 `;
+
+/** Attach stage_count to each guide from the joined stages array */
+function withStageCounts(guides: any[]): Guide[] {
+  return guides.map((g) => {
+    const stage_count = Array.isArray(g.stages) ? g.stages.length : 0;
+    const { stages: _stages, ...rest } = g;
+    return { ...rest, stage_count } as Guide;
+  });
+}
 
 async function _fetchGuides(
   sort: string,
@@ -55,7 +65,7 @@ async function _fetchGuides(
     return [];
   }
 
-  return data as unknown as Guide[];
+  return withStageCounts(data as any[]);
 }
 
 const cachedFetchGuides = unstable_cache(

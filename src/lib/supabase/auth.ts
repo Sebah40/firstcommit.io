@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { updateTag } from "next/cache";
 import { createClient } from "./server";
 
 export async function signUp(formData: FormData) {
@@ -57,11 +58,13 @@ export async function deleteGuide(guideId: string): Promise<boolean> {
   const supabase = await createClient();
   const { error } = await supabase.from("posts").update({ is_hidden: true }).eq("id", guideId);
   if (error) { console.error("Failed to delete guide:", error.message); return false; }
+  updateTag("guides");
+  updateTag(`guide-${guideId}`);
   return true;
 }
 
 export async function updateGuideAction(guideId: string, input: {
-  title: string; hookDescription: string; techs: string[]; categoryId: string | null; instanceUrl?: string | null;
+  title: string; hookDescription: string; techs: string[]; categoryId: string | null; instanceUrl?: string | null; repoUrl?: string | null;
 }) {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -72,11 +75,14 @@ export async function updateGuideAction(guideId: string, input: {
       techs: input.techs,
       category_id: input.categoryId,
       instance_url: input.instanceUrl ?? null,
+      repo_url: input.repoUrl ?? null,
     })
     .eq("id", guideId)
     .select("*,profile:profiles!posts_user_id_fkey(*),category:categories!posts_category_id_fkey(*),media:post_media(*)")
     .single();
   if (error || !data) return null;
+  updateTag("guides");
+  updateTag(`guide-${guideId}`);
   return data;
 }
 
@@ -87,6 +93,7 @@ export async function toggleLikeAction(guideId: string, userId: string, liked: b
   } else {
     await supabase.from("post_likes").insert({ post_id: guideId, user_id: userId });
   }
+  updateTag(`guide-${guideId}`);
 }
 
 export async function toggleSaveAction(guideId: string, userId: string, saved: boolean) {
@@ -96,6 +103,7 @@ export async function toggleSaveAction(guideId: string, userId: string, saved: b
   } else {
     await supabase.from("post_saves").insert({ post_id: guideId, user_id: userId });
   }
+  updateTag(`guide-${guideId}`);
 }
 
 export async function toggleFollowAction(followerId: string, followingId: string, following: boolean) {
@@ -118,20 +126,27 @@ export async function createCommentAction(
     .select("*,profile:profiles!comments_user_id_fkey(*)")
     .single();
   if (error) return null;
+  updateTag(`comments-${guideId}`);
+  updateTag(`guide-${guideId}`);
   return data;
 }
 
-export async function updateCommentAction(commentId: string, content: string): Promise<boolean> {
+export async function updateCommentAction(commentId: string, content: string, guideId?: string): Promise<boolean> {
   const supabase = await createClient();
   const { error } = await supabase.from("comments").update({ content }).eq("id", commentId);
   if (error) { console.error("Failed to update comment:", error.message); return false; }
+  if (guideId) updateTag(`comments-${guideId}`);
   return true;
 }
 
-export async function deleteCommentAction(commentId: string): Promise<boolean> {
+export async function deleteCommentAction(commentId: string, guideId?: string): Promise<boolean> {
   const supabase = await createClient();
   const { error } = await supabase.from("comments").update({ is_hidden: true }).eq("id", commentId);
   if (error) { console.error("Failed to delete comment:", error.message); return false; }
+  if (guideId) {
+    updateTag(`comments-${guideId}`);
+    updateTag(`guide-${guideId}`);
+  }
   return true;
 }
 
