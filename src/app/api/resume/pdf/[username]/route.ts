@@ -34,17 +34,24 @@ export async function GET(
       return NextResponse.json({ error: "No PDF found" }, { status: 404 });
     }
 
+    console.log("[resume/pdf]", username, "url:", profile.resume_pdf_url);
+
     const res = await fetch(profile.resume_pdf_url);
+    console.log("[resume/pdf]", username, "upstream:", res.status, "size:", res.headers.get("content-length"), "type:", res.headers.get("content-type"));
+
     if (!res.ok) {
       return NextResponse.json({ error: "PDF unavailable", upstream: res.status }, { status: 502 });
     }
 
     const buf = await res.arrayBuffer();
+    console.log("[resume/pdf]", username, "buffer:", buf.byteLength, "bytes");
+
     return new NextResponse(buf, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": "inline",
         "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
+        "Content-Security-Policy": "frame-ancestors 'self'; navigate-to 'none'",
       },
     });
   } catch (err) {
