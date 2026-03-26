@@ -3,11 +3,12 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Github } from "lucide-react";
 import { MediaGallery } from "@/components/guide/media-gallery";
 import { GuideActions } from "@/components/guide/guide-actions";
 import { AuthorCard } from "@/components/guide/author-card";
 import { Recommendations } from "@/components/guide/recommendations";
+import { BuildThisCard } from "@/components/guide/build-this-card";
 import { StagesTimeline } from "@/components/timeline/stages-timeline";
 import { CommentSection } from "@/components/comments/comment-section";
 import {
@@ -136,6 +137,17 @@ export function GuideDetailClient({
                   {guide.instance_url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
                 </a>
               )}
+              {guide.repo_url && (
+                <a
+                  href={guide.repo_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground hover:bg-muted/80 transition-colors"
+                >
+                  <Github size={12} />
+                  {guide.repo_url.replace(/^https?:\/\/(www\.)?github\.com\//, "")}
+                </a>
+              )}
               {guide.techs.length > 0 &&
                 guide.techs.map((tech) => (
                   <span
@@ -156,7 +168,7 @@ export function GuideDetailClient({
             </div>
           </div>
 
-          {/* Mobile: author card + actions */}
+          {/* Mobile: author card + actions + build this */}
           <div className="mb-6 flex flex-col gap-4 lg:hidden">
             {guide.profile && (
               <AuthorCard
@@ -177,6 +189,14 @@ export function GuideDetailClient({
               onGuideUpdated={handleGuideUpdated}
               onGuideDeleted={handleGuideDeleted}
             />
+            {guide.stages && guide.stages.length > 0 && (
+              <BuildThisCard
+                guideId={guide.id}
+                guideTitle={guide.title}
+                repoUrl={guide.repo_url}
+                stageCount={guide.stages.length}
+              />
+            )}
           </div>
 
           {/* Stages timeline */}
@@ -223,6 +243,14 @@ export function GuideDetailClient({
               onGuideUpdated={handleGuideUpdated}
               onGuideDeleted={handleGuideDeleted}
             />
+            {guide.stages && guide.stages.length > 0 && (
+              <BuildThisCard
+                guideId={guide.id}
+                guideTitle={guide.title}
+                repoUrl={guide.repo_url}
+                stageCount={guide.stages.length}
+              />
+            )}
             <Recommendations guides={recommended} />
           </div>
         </motion.div>

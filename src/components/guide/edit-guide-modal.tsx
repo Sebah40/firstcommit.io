@@ -25,6 +25,7 @@ export function EditGuideModal({ open, guide, userId, onClose, onSaved }: EditGu
   const [techs, setTechs] = useState<string[]>(guide.techs);
   const [categoryId, setCategoryId] = useState<string | null>(guide.category_id);
   const [instanceUrl, setInstanceUrl] = useState(guide.instance_url ?? "");
+  const [repoUrl, setRepoUrl] = useState(guide.repo_url ?? "");
   const [media, setMedia] = useState<PostMedia[]>(guide.media ?? []);
   const [saving, setSaving] = useState(false);
 
@@ -34,6 +35,7 @@ export function EditGuideModal({ open, guide, userId, onClose, onSaved }: EditGu
     setTechs(guide.techs);
     setCategoryId(guide.category_id);
     setInstanceUrl(guide.instance_url ?? "");
+    setRepoUrl(guide.repo_url ?? "");
     setMedia(guide.media ?? []);
   }, [guide]);
 
@@ -58,6 +60,7 @@ export function EditGuideModal({ open, guide, userId, onClose, onSaved }: EditGu
       techs,
       categoryId,
       instanceUrl: instanceUrl.trim() || null,
+      repoUrl: repoUrl.trim() || null,
     });
 
     if (updated) {
@@ -69,6 +72,7 @@ export function EditGuideModal({ open, guide, userId, onClose, onSaved }: EditGu
         category_id: updated.category_id,
         category: updated.category,
         instance_url: updated.instance_url,
+        repo_url: updated.repo_url,
         media,
       });
       onClose();
@@ -138,6 +142,20 @@ export function EditGuideModal({ open, guide, userId, onClose, onSaved }: EditGu
               value={instanceUrl}
               onChange={(e) => setInstanceUrl(e.target.value)}
               placeholder="https://myproject.com"
+              className="w-full rounded-lg bg-muted px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-accent/30 transition-shadow"
+            />
+          </div>
+
+          {/* Repo URL */}
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              GitHub Repo
+            </label>
+            <input
+              type="url"
+              value={repoUrl}
+              onChange={(e) => setRepoUrl(e.target.value)}
+              placeholder="https://github.com/user/project"
               className="w-full rounded-lg bg-muted px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-accent/30 transition-shadow"
             />
           </div>

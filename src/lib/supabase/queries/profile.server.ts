@@ -28,7 +28,8 @@ export async function fetchUserGuidesServer(
     `)
     .eq("user_id", userId)
     .eq("is_hidden", false)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   if (error) return [];
   return data as unknown as Guide[];

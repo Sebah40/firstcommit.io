@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 // Service role client for DB writes (bypasses RLS)
 function getServiceClient() {
@@ -58,6 +59,15 @@ async function translateAll(
 }
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  const limit_result = rateLimit(`translate:${ip}`, { max: 20, windowMs: 60_000 });
+  if (!limit_result.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(limit_result.retryAfterMs / 1000)) } }
+    );
+  }
+
   const body = await req.json();
 
   // ── Mode 1: Cached post translation (postId + locale) ──

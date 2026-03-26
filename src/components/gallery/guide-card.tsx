@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, MessageCircle, Bookmark, MessageSquare, FileCode, ExternalLink } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, MessageSquare, FileCode, ExternalLink, GitBranch } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { formatNumber, formatRelativeTime, guideDetailPath } from "@/lib/utils";
 import { getTechColor } from "@/lib/utils/tech-icons";
@@ -99,23 +99,27 @@ export function GuideCard({ guide }: GuideCardProps) {
             </div>
           )}
 
-          {/* Conversation stats */}
-          {(guide.message_count > 0 || guide.files_changed > 0) && (
-            <div className="mb-1.5 flex items-center gap-3 text-xs text-muted-foreground">
-              {guide.message_count > 0 && (
-                <span className="flex items-center gap-1">
-                  <MessageSquare size={11} />
-                  {guide.message_count} {t("common.messages")}
-                </span>
-              )}
-              {guide.files_changed > 0 && (
-                <span className="flex items-center gap-1">
-                  <FileCode size={11} />
-                  {guide.files_changed} {t("common.files")}
-                </span>
-              )}
-            </div>
-          )}
+          {/* Build stats bar */}
+          <div className="mb-1.5 flex items-center gap-2.5 text-xs text-muted-foreground">
+            {guide.message_count > 0 && (
+              <span className="flex items-center gap-1" title={`${guide.message_count} prompts exchanged`}>
+                <MessageSquare size={11} />
+                {guide.message_count}
+              </span>
+            )}
+            {guide.files_changed > 0 && (
+              <span className="flex items-center gap-1" title={`${guide.files_changed} files changed`}>
+                <FileCode size={11} />
+                {guide.files_changed}
+              </span>
+            )}
+            {(guide as any).stage_count > 0 && (
+              <span className="flex items-center gap-1" title={`${(guide as any).stage_count} build stages`}>
+                <GitBranch size={11} />
+                {(guide as any).stage_count}
+              </span>
+            )}
+          </div>
 
           {/* Highlight snippet */}
           {guide.highlight_snippet && (

@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Build**: `npm run build`
 - **Lint**: `npm run lint`
 - **Production server**: `npm run start`
+- **Push Supabase migrations**: `SUPABASE_DB_PASSWORD=$(cat db-password) npx supabase db push` — run this directly from console when migrations are added. Migrations live in `supabase/migrations/`.
 
 ## Architecture
 

@@ -26,7 +26,8 @@ export async function fetchUserGuides(userId: string): Promise<Guide[]> {
     `)
     .eq("user_id", userId)
     .eq("is_hidden", false)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   if (error) return [];
   return data as unknown as Guide[];
@@ -44,7 +45,8 @@ export async function fetchUserComments(userId: string): Promise<Comment[]> {
     `)
     .eq("user_id", userId)
     .eq("is_hidden", false)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   if (error) return [];
   return data as unknown as Comment[];
@@ -63,7 +65,8 @@ export async function fetchUserLikedGuides(userId: string): Promise<Guide[]> {
       )
     `)
     .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   if (error) return [];
   return (data ?? []).map((row: any) => row.post).filter(Boolean) as Guide[];
@@ -82,7 +85,8 @@ export async function fetchUserSavedGuides(userId: string): Promise<Guide[]> {
       )
     `)
     .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   if (error) return [];
   return (data ?? []).map((row: any) => row.post).filter(Boolean) as Guide[];

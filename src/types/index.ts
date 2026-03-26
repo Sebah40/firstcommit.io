@@ -132,6 +132,7 @@ export interface Post {
   highlight_snippet: string | null;
   content: string | null;
   instance_url: string | null;
+  repo_url: string | null;
   // Joined
   profile?: Profile;
   category?: Category;
@@ -188,7 +189,7 @@ export interface Comment {
 export interface Notification {
   id: string;
   user_id: string;
-  type: "like" | "comment" | "reply";
+  type: "like" | "comment" | "reply" | "follow";
   actor_id: string;
   post_id: string | null;
   comment_id: string | null;

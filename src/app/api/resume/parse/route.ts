@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { PDFParse } from "pdf-parse";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  const limit_result = rateLimit(`resume-parse:${ip}`, { max: 5, windowMs: 60_000 });
+  if (!limit_result.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(limit_result.retryAfterMs / 1000)) } }
+    );
+  }
+
   try {
     const supabase = await createClient();
     const {

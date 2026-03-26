@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, MessageCircle, Bookmark, MessageSquare, FileCode, ExternalLink } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, MessageSquare, FileCode, ExternalLink, GitBranch } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { formatNumber, formatRelativeTime, guideDetailPath } from "@/lib/utils";
 import { getTechColor } from "@/lib/utils/tech-icons";
@@ -148,23 +148,27 @@ export function GuideFeedCard({ guide, priority }: GuideFeedCardProps) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    {/* Conversation stats (messages/files) */}
-                    {(guide.message_count > 0 || guide.files_changed > 0) && (
-                        <div className="hidden sm:flex items-center gap-4 text-xs font-medium text-muted-foreground mr-2 border-r border-border/40 pr-4">
-                            {guide.message_count > 0 && (
-                                <span className="flex items-center gap-1.5" title={`${guide.message_count} prompts`}>
-                                    <MessageSquare size={14} />
-                                    {guide.message_count}
-                                </span>
-                            )}
-                            {guide.files_changed > 0 && (
-                                <span className="flex items-center gap-1.5" title={`${guide.files_changed} files changed`}>
-                                    <FileCode size={14} />
-                                    {guide.files_changed}
-                                </span>
-                            )}
-                        </div>
-                    )}
+                    {/* Build stats */}
+                    <div className="hidden sm:flex items-center gap-4 text-xs font-medium text-muted-foreground mr-2 border-r border-border/40 pr-4">
+                        {guide.message_count > 0 && (
+                            <span className="flex items-center gap-1.5" title={`${guide.message_count} prompts`}>
+                                <MessageSquare size={14} />
+                                {guide.message_count}
+                            </span>
+                        )}
+                        {guide.files_changed > 0 && (
+                            <span className="flex items-center gap-1.5" title={`${guide.files_changed} files changed`}>
+                                <FileCode size={14} />
+                                {guide.files_changed}
+                            </span>
+                        )}
+                        {(guide as any).stage_count > 0 && (
+                            <span className="flex items-center gap-1.5" title={`${(guide as any).stage_count} build stages`}>
+                                <GitBranch size={14} />
+                                {(guide as any).stage_count} stages
+                            </span>
+                        )}
+                    </div>
 
                     <button className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
                         <Bookmark size={18} />
