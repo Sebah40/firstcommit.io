@@ -8,6 +8,7 @@ import { formatNumber, formatRelativeTime, guideDetailPath } from "@/lib/utils";
 import { getTechColor } from "@/lib/utils/tech-icons";
 import { useTranslation } from "@/lib/i18n/use-translation";
 import { useTranslateTexts } from "@/hooks/use-translate";
+import { usePostTranslation } from "@/hooks/use-post-translation";
 import type { Guide } from "@/types";
 
 interface GuideFeedCardProps {
@@ -17,11 +18,11 @@ interface GuideFeedCardProps {
 
 export function GuideFeedCard({ guide, priority }: GuideFeedCardProps) {
     const { t } = useTranslation();
-    const [trTitle, trHook, trSnippet] = useTranslateTexts([
-        guide.title,
-        guide.hook_description ?? "",
-        guide.highlight_snippet ?? "",
-    ]);
+    const { title: trTitle, hook_description: trHook } = usePostTranslation(guide.id, {
+        title: guide.title,
+        hook_description: guide.hook_description ?? "",
+    });
+    const [trSnippet] = useTranslateTexts([guide.highlight_snippet ?? ""]);
 
     const bodySnippet = trHook || guide.hook_description || trSnippet || guide.highlight_snippet;
 
