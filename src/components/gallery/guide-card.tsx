@@ -7,6 +7,7 @@ import { formatNumber, formatRelativeTime, guideDetailPath } from "@/lib/utils";
 import { getTechColor } from "@/lib/utils/tech-icons";
 import { useTranslation } from "@/lib/i18n/use-translation";
 import { useTranslateTexts } from "@/hooks/use-translate";
+import { usePostTranslation } from "@/hooks/use-post-translation";
 import type { Guide } from "@/types";
 
 interface GuideCardProps {
@@ -15,10 +16,11 @@ interface GuideCardProps {
 
 export function GuideCard({ guide }: GuideCardProps) {
   const { t } = useTranslation();
-  const [trTitle, trSnippet] = useTranslateTexts([
-    guide.title,
-    guide.highlight_snippet ?? "",
-  ]);
+  const { title: trTitle } = usePostTranslation(guide.id, {
+    title: guide.title,
+    hook_description: guide.hook_description ?? "",
+  });
+  const [trSnippet] = useTranslateTexts([guide.highlight_snippet ?? ""]);
 
   return (
     <Link href={guideDetailPath(guide.id, guide.title)} className="group block">
