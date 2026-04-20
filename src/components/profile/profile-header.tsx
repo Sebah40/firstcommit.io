@@ -346,7 +346,7 @@ export function ProfileHeader({ profile, isOwner, onProfileUpdate }: ProfileHead
                   {formatJoinDate(profile.created_at)}
                 </span>
               </div>
-              {(profile.github_url || profile.linkedin_url || profile.cv_url || profile.resume_data) && (
+              {(profile.github_url || profile.linkedin_url || profile.resume_data) && (
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   {profile.resume_data && (
                     <a
@@ -377,15 +377,6 @@ export function ProfileHeader({ profile, isOwner, onProfileUpdate }: ProfileHead
                     >
                       <Linkedin size={16} />
                       LinkedIn
-                    </a>
-                  )}
-                  {profile.cv_url && (
-                    <a
-                      href={`/profile/${profile.username}/cv`}
-                      className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      <FileText size={16} />
-                      {t("profile.cv")}
                     </a>
                   )}
                 </div>
