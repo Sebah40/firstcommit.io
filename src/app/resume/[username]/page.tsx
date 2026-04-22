@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fetchProfileByUsernameServer } from "@/lib/supabase/queries/profile.server";
-import { ResumePdfFrame } from "@/components/resume/resume-pdf-frame";
+import { ResumeLangToggle } from "@/components/resume/resume-lang-toggle";
 import type { Metadata } from "next";
 import type { ResumeData } from "@/types";
 
@@ -31,6 +31,16 @@ export default async function ResumePage({ params }: ResumePageProps) {
   }
 
   const hasPdf = !!profile.resume_pdf_url;
+  const esPdfUrl = profile.resume_pdf_url?.replace(/\/resume\.pdf(\?|$)/, "/resume-es.pdf$1");
+  let hasEs = false;
+  if (esPdfUrl && esPdfUrl !== profile.resume_pdf_url) {
+    try {
+      const head = await fetch(esPdfUrl, { method: "HEAD", cache: "no-store" });
+      hasEs = head.ok;
+    } catch {
+      hasEs = false;
+    }
+  }
 
   if (!hasPdf) {
     return (
@@ -50,7 +60,7 @@ export default async function ResumePage({ params }: ResumePageProps) {
       className="-mx-4 -my-6 sm:-mx-6"
       style={{ height: "calc(100vh - 3.5rem)" }}
     >
-      <ResumePdfFrame src={`/api/resume/pdf/${username}`} />
+      <ResumeLangToggle username={username} hasEs={hasEs} />
     </div>
   );
 }
