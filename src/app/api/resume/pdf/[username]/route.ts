@@ -9,11 +9,12 @@ function getServiceClient() {
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ username: string }> }
 ) {
   try {
     const { username } = await params;
+    const lang = req.nextUrl.searchParams.get("lang") === "es" ? "es" : "en";
 
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return NextResponse.json({ error: "Missing Supabase env vars" }, { status: 500 });
@@ -34,9 +35,13 @@ export async function GET(
       return NextResponse.json({ error: "No PDF found" }, { status: 404 });
     }
 
-    console.log("[resume/pdf]", username, "url:", profile.resume_pdf_url);
+    const pdfUrl = lang === "es"
+      ? profile.resume_pdf_url.replace(/\/resume\.pdf(\?|$)/, "/resume-es.pdf$1")
+      : profile.resume_pdf_url;
 
-    const res = await fetch(profile.resume_pdf_url);
+    console.log("[resume/pdf]", username, "lang:", lang, "url:", pdfUrl);
+
+    const res = await fetch(pdfUrl);
     console.log("[resume/pdf]", username, "upstream:", res.status, "size:", res.headers.get("content-length"), "type:", res.headers.get("content-type"));
 
     if (!res.ok) {
