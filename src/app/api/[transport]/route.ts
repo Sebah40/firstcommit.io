@@ -765,10 +765,12 @@ The guide provides the MAP (approach, decisions, pitfalls). The repo provides th
         description: `Read your current resume data and published guides. Requires authentication.
 
 Returns:
-- resume_data: The user's REAL resume (work history, education, skills, etc.) — this is their actual CV. If it contains a _raw_text field, the user uploaded a PDF that hasn't been structured yet — use that text to build the structured version.
-- published_guides: List of guides the user published on First Commit (id, title, hook, techs). These can optionally become "Projects" on the resume if the user wants.
+- resume_data: The user's REAL English resume (work history, education, skills, etc.). If it contains a _raw_text field, the user uploaded a PDF that hasn't been structured yet — use that text to build the structured version.
+- resume_data_es: The Spanish variant of the resume, if one exists. Null otherwise.
+- resume_pdf_url / resume_pdf_url_es: Public URLs of the generated PDFs per locale.
+- published_guides: List of guides the user published on First Commit (id, title, hook, techs). These can optionally become "Projects" on the resume.
 
-IMPORTANT: resume_data contains real personal data (jobs, degrees, contact info). It must NEVER be discarded or overwritten carelessly. Always read this before calling firstcommit_update_resume.`,
+IMPORTANT: resume_data / resume_data_es contain real personal data (jobs, degrees, contact info). Never discard or overwrite carelessly. Always read this before calling firstcommit_update_resume. To push a translation, call firstcommit_update_resume with locale="es".`,
         inputSchema: {},
       },
       async (_args, extra) => {
@@ -784,7 +786,7 @@ IMPORTANT: resume_data contains real personal data (jobs, degrees, contact info)
         // Get profile with resume data
         const { data: profile, error: profileErr } = await supabase
           .from("profiles")
-          .select("username, display_name, resume_data, resume_style_instructions, resume_updated_at, resume_pdf_url, resume_max_pages, github_url, linkedin_url, avatar_url")
+          .select("username, display_name, resume_data, resume_data_es, resume_style_instructions, resume_updated_at, resume_pdf_url, resume_pdf_url_es, resume_max_pages, github_url, linkedin_url, avatar_url")
           .eq("id", userId)
           .single();
 
@@ -822,9 +824,11 @@ IMPORTANT: resume_data contains real personal data (jobs, degrees, contact info)
             avatar_url: profile.avatar_url,
           },
           resume_data: profile.resume_data ?? null,
+          resume_data_es: profile.resume_data_es ?? null,
           resume_style_instructions: profile.resume_style_instructions ?? null,
           resume_updated_at: profile.resume_updated_at ?? null,
           resume_pdf_url: profile.resume_pdf_url ?? null,
+          resume_pdf_url_es: profile.resume_pdf_url_es ?? null,
           resume_max_pages: profile.resume_max_pages ?? 1,
           published_guides: guideSummaries,
         };
@@ -924,9 +928,11 @@ The resume renders at firstcommit.io/resume/{username} in Harvard format.`,
           }).describe("Full structured resume data"),
           style_instructions: z.string().optional().describe("User's preferred style/tone for the resume (e.g., 'keep it concise', 'emphasize backend work')"),
           max_pages: z.number().int().min(1).max(4).optional().describe("Maximum number of pages for the PDF (default: 1). If the generated PDF exceeds this, the tool will report how many pages overflowed."),
+          locale: z.enum(["en", "es"]).optional().describe("Language of this resume variant. Default 'en'. Pass 'es' to push a Spanish translation alongside the English one — it is stored separately and does NOT overwrite the English resume."),
         },
       },
-      async ({ resume_data, style_instructions, max_pages }, extra) => {
+      async ({ resume_data, style_instructions, max_pages, locale }, extra) => {
+        const effectiveLocale: "en" | "es" = locale ?? "en";
         const userId = (extra.authInfo?.extra as { userId?: string })?.userId;
         if (!userId) {
           return {
@@ -937,9 +943,13 @@ The resume renders at firstcommit.io/resume/{username} in Harvard format.`,
         const supabase = getSupabase();
 
         const update: Record<string, unknown> = {
-          resume_data,
           resume_updated_at: new Date().toISOString(),
         };
+        if (effectiveLocale === "en") {
+          update.resume_data = resume_data;
+        } else {
+          update.resume_data_es = resume_data;
+        }
         if (style_instructions !== undefined) {
           update.resume_style_instructions = style_instructions;
         }
@@ -970,9 +980,9 @@ The resume renders at firstcommit.io/resume/{username} in Harvard format.`,
 
         // Generate PDF and report overflow
         try {
-          const pdf = await generateResumePdf(userId, resume_data, effectiveMaxPages);
+          const pdf = await generateResumePdf(userId, resume_data, effectiveMaxPages, effectiveLocale);
 
-          let msg = `Resume updated and PDF generated!\n\nView it at: ${resumeUrl}\n\nPDF: ${pdf.pages} page(s) (limit: ${pdf.max_pages})`;
+          let msg = `Resume (${effectiveLocale.toUpperCase()}) updated and PDF generated!\n\nView it at: ${resumeUrl}\n\nPDF: ${pdf.pages} page(s) (limit: ${pdf.max_pages})`;
           if (pdf.overflowed) {
             msg += `\n\n⚠️ OVERFLOW: Resume is ${pdf.pages} pages but limit is ${pdf.max_pages}. Please trim ${pdf.overflow_pages} page(s) worth of content and call this tool again. Suggested areas to reduce: long bullet-point lists, verbose summaries, or lower-priority projects.`;
           }
