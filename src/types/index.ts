@@ -75,9 +75,11 @@ export interface Profile {
   linkedin_url: string | null;
   cv_url: string | null;
   resume_data: ResumeData | null;
+  resume_data_es: ResumeData | null;
   resume_style_instructions: string | null;
   resume_updated_at: string | null;
   resume_pdf_url: string | null;
+  resume_pdf_url_es: string | null;
   resume_max_pages: number;
   followers_count: number;
   following_count: number;

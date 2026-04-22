@@ -12,18 +12,22 @@ function countPages(buf: Buffer): number {
   return matches ? matches.length : 1;
 }
 
+export type ResumeLocale = "en" | "es";
+
 export interface GenerateResult {
   pdf_url: string;
   pages: number;
   max_pages: number;
   overflowed: boolean;
   overflow_pages: number;
+  locale: ResumeLocale;
 }
 
 export async function generateResumePdf(
   userId: string,
   resumeData: ResumeData,
-  maxPages = 1
+  maxPages = 1,
+  locale: ResumeLocale = "en"
 ): Promise<GenerateResult> {
   const buf = await renderToBuffer(
     createElement(ResumePdf, { data: resumeData }) as ReactElement<DocumentProps>
@@ -35,7 +39,8 @@ export async function generateResumePdf(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const storagePath = `resumes/${userId}/resume.pdf`;
+  const fileName = locale === "en" ? "resume.pdf" : `resume-${locale}.pdf`;
+  const storagePath = `resumes/${userId}/${fileName}`;
   await supabase.storage
     .from("post-media")
     .upload(storagePath, buf, { contentType: "application/pdf", upsert: true });
@@ -44,9 +49,10 @@ export async function generateResumePdf(
     .from("post-media")
     .getPublicUrl(storagePath);
 
+  const urlColumn = locale === "en" ? "resume_pdf_url" : `resume_pdf_url_${locale}`;
   await supabase
     .from("profiles")
-    .update({ resume_pdf_url: publicUrl })
+    .update({ [urlColumn]: publicUrl })
     .eq("id", userId);
 
   return {
@@ -55,5 +61,6 @@ export async function generateResumePdf(
     max_pages: maxPages,
     overflowed: pages > maxPages,
     overflow_pages: Math.max(0, pages - maxPages),
+    locale,
   };
 }

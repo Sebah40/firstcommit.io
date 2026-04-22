@@ -31,16 +31,7 @@ export default async function ResumePage({ params }: ResumePageProps) {
   }
 
   const hasPdf = !!profile.resume_pdf_url;
-  const esPdfUrl = profile.resume_pdf_url?.replace(/\/resume\.pdf(\?|$)/, "/resume-es.pdf$1");
-  let hasEs = false;
-  if (esPdfUrl && esPdfUrl !== profile.resume_pdf_url) {
-    try {
-      const head = await fetch(esPdfUrl, { method: "HEAD", cache: "no-store" });
-      hasEs = head.ok;
-    } catch {
-      hasEs = false;
-    }
-  }
+  const hasEs = !!profile.resume_pdf_url_es;
 
   if (!hasPdf) {
     return (
