@@ -46,7 +46,7 @@ export async function GET(
     const buf = await res.arrayBuffer();
     console.log("[resume/pdf]", username, "buffer:", buf.byteLength, "bytes");
 
-    return new NextResponse(buf, {
+    return new NextResponse(new Uint8Array(buf), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": "inline",
