@@ -10,13 +10,18 @@ export function ResumePdfFrame({ src }: { src: string }) {
     if (!iframe) return;
 
     const onLoad = () => {
-      let currentHref: string;
+      let currentHref: string | null = null;
       try {
-        currentHref = iframe.contentWindow?.location.href ?? "";
+        currentHref = iframe.contentWindow?.location.href ?? null;
       } catch {
+        // Cross-origin navigation (e.g. PDF link clicked to external URL).
+        // The URL is unreadable due to same-origin policy; reset the frame
+        // so the user doesn't see a blocked-frame white page.
+        iframe.src = src;
         return;
       }
 
+      if (currentHref === null) return;
       const currentUrl = new URL(currentHref, window.location.origin);
       const originalUrl = new URL(src, window.location.origin);
 
