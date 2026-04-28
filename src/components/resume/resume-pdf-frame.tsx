@@ -1,46 +1,61 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export function ResumePdfFrame({ src }: { src: string }) {
-  const ref = useRef<HTMLIFrameElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  const [numPages, setNumPages] = useState(0);
 
   useEffect(() => {
-    const iframe = ref.current;
-    if (!iframe) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const resize = () => setWidth(el.clientWidth);
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
-    const onLoad = () => {
-      let currentHref: string | null = null;
-      try {
-        currentHref = iframe.contentWindow?.location.href ?? null;
-      } catch {
-        // Cross-origin navigation (e.g. PDF link clicked to external URL).
-        // The URL is unreadable due to same-origin policy; reset the frame
-        // so the user doesn't see a blocked-frame white page.
-        iframe.src = src;
-        return;
-      }
-
-      if (currentHref === null) return;
-      const currentUrl = new URL(currentHref, window.location.origin);
-      const originalUrl = new URL(src, window.location.origin);
-
-      if (currentUrl.pathname !== originalUrl.pathname) {
-        window.open(currentHref, "_blank", "noopener,noreferrer");
-        iframe.src = src;
-      }
-    };
-
-    iframe.addEventListener("load", onLoad);
-    return () => iframe.removeEventListener("load", onLoad);
-  }, [src]);
+  const pageWidth = width > 0 ? Math.min(width - 16, 900) : undefined;
 
   return (
-    <iframe
-      ref={ref}
-      src={src}
-      style={{ width: "100%", height: "100%", border: "none" }}
-      title="Resume"
-    />
+    <div
+      ref={containerRef}
+      className="h-full w-full overflow-auto bg-[#011627]"
+    >
+      <Document
+        file={src}
+        onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+        externalLinkTarget="_blank"
+        externalLinkRel="noopener noreferrer"
+        loading={
+          <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+            Loading resume…
+          </div>
+        }
+        error={
+          <div className="flex h-full items-center justify-center text-xs text-destructive">
+            Failed to load resume.
+          </div>
+        }
+        className="flex flex-col items-center gap-4 py-4"
+      >
+        {Array.from({ length: numPages }, (_, i) => (
+          <Page
+            key={i + 1}
+            pageNumber={i + 1}
+            width={pageWidth}
+            renderTextLayer
+            renderAnnotationLayer
+          />
+        ))}
+      </Document>
+    </div>
   );
 }
