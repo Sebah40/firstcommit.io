@@ -15,6 +15,7 @@ export async function GET(
   try {
     const { username } = await params;
     const lang = req.nextUrl.searchParams.get("lang") === "es" ? "es" : "en";
+    const asDownload = req.nextUrl.searchParams.get("download") === "1";
 
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return NextResponse.json({ error: "Missing Supabase env vars" }, { status: 500 });
@@ -48,10 +49,14 @@ export async function GET(
       return NextResponse.json({ error: "PDF unavailable", upstream: res.status }, { status: 502 });
     }
 
+    const disposition = asDownload
+      ? `attachment; filename="${username}-resume-${lang}.pdf"`
+      : "inline";
+
     return new Response(res.body, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": "inline",
+        "Content-Disposition": disposition,
         "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
         "Content-Security-Policy": "frame-ancestors 'self'; navigate-to 'none'",
       },
