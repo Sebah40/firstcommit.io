@@ -44,14 +44,11 @@ export async function GET(
     const res = await fetch(pdfUrl);
     console.log("[resume/pdf]", username, "upstream:", res.status, "size:", res.headers.get("content-length"), "type:", res.headers.get("content-type"));
 
-    if (!res.ok) {
+    if (!res.ok || !res.body) {
       return NextResponse.json({ error: "PDF unavailable", upstream: res.status }, { status: 502 });
     }
 
-    const buf = await res.arrayBuffer();
-    console.log("[resume/pdf]", username, "buffer:", buf.byteLength, "bytes");
-
-    return new NextResponse(new Uint8Array(buf), {
+    return new Response(res.body, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": "inline",
