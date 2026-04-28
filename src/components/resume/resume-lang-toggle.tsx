@@ -45,7 +45,7 @@ export function ResumeLangToggle({
             <LinkList links={links} />
           </div>
         )}
-        <div className="flex-1">
+        <div className="flex-1 min-h-0">
           <ResumePdfFrame src={`/api/resume/pdf/${username}`} />
         </div>
       </div>
@@ -73,7 +73,7 @@ export function ResumeLangToggle({
           ))}
         </div>
       </div>
-      <div className="flex-1">
+      <div className="flex-1 min-h-0">
         <ResumePdfFrame src={`/api/resume/pdf/${username}?lang=${lang}`} />
       </div>
     </div>
