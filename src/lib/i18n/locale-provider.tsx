@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useState, useEffect, useCallback } from "react";
+import { createContext, useState, useCallback } from "react";
 import type { Locale } from "./index";
 import { DEFAULT_LOCALE, STORAGE_KEY } from "./index";
 import en from "./locales/en";
@@ -21,21 +21,19 @@ export const LocaleContext = createContext<LocaleContextValue>({
   t: (key) => en[key],
 });
 
-export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
-
-  // Read stored preference after mount (avoids hydration mismatch)
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Locale | null;
-    if (stored && stored in dictionaries) {
-      setLocaleState(stored);
-      document.documentElement.lang = stored;
-    }
-  }, []);
+export function LocaleProvider({
+  children,
+  initialLocale,
+}: {
+  children: React.ReactNode;
+  initialLocale: Locale;
+}) {
+  const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next);
-    localStorage.setItem(STORAGE_KEY, next);
+    document.cookie = `${STORAGE_KEY}=${next}; path=/; max-age=31536000; SameSite=Lax`;
+    try { localStorage.setItem(STORAGE_KEY, next); } catch {}
     document.documentElement.lang = next;
   }, []);
 
