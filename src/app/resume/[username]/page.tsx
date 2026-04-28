@@ -46,12 +46,25 @@ export default async function ResumePage({ params }: ResumePageProps) {
     );
   }
 
+  const data = profile.resume_data as ResumeData;
+  const links: Array<{ label: string; url: string }> = [];
+  if (data.basics?.url) {
+    const u = data.basics.url.startsWith("http") ? data.basics.url : `https://${data.basics.url}`;
+    links.push({ label: "LinkedIn", url: u });
+  }
+  for (const cert of data.certifications ?? []) {
+    if (cert.url) links.push({ label: cert.name, url: cert.url });
+  }
+  for (const proj of data.projects ?? []) {
+    if (proj.url) links.push({ label: proj.name, url: proj.url });
+  }
+
   return (
     <div
       className="-mx-4 -my-6 sm:-mx-6"
       style={{ height: "calc(100vh - 3.5rem)" }}
     >
-      <ResumeLangToggle username={username} hasEs={hasEs} />
+      <ResumeLangToggle username={username} hasEs={hasEs} links={links} />
     </div>
   );
 }
