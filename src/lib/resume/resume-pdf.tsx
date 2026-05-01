@@ -11,6 +11,9 @@ Font.register({
   ],
 });
 
+// Don't break words with hyphens; wrap on word boundaries instead.
+Font.registerHyphenationCallback((word) => [word]);
+
 // Night Owl palette
 const OWL = {
   bg: "#011627",
@@ -98,7 +101,7 @@ const s = StyleSheet.create({
     color: OWL.name,
     marginBottom: 3,
   },
-  label: { fontSize: 11, color: OWL.label, marginBottom: 4 },
+  label: { fontSize: 10, color: OWL.label, marginBottom: 4 },
   contactRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -259,7 +262,7 @@ export function ResumePdf({ data }: { data: ResumeData }) {
                   {websites.map((w, i) => (
                     <Link key={i} src={w.url} style={{ textDecoration: "none" }}>
                       <View style={s.websiteBtn}>
-                        <Text style={s.websiteBtnText}>{w.label}  ↗</Text>
+                        <Text style={s.websiteBtnText}>{w.label}</Text>
                       </View>
                     </Link>
                   ))}
