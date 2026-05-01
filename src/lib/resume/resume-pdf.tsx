@@ -57,6 +57,41 @@ const s = StyleSheet.create({
     paddingRight: 32,
   },
   header: { marginBottom: 8 },
+  headerTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+    marginBottom: 4,
+  },
+  headerLeft: { flex: 1, minWidth: 0 },
+  headerRight: { alignItems: "flex-end", maxWidth: "60%" },
+  headerRightLabel: {
+    fontSize: 7,
+    fontFamily: "Outfit", fontWeight: 700,
+    color: OWL.section,
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  websitesGroup: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 4,
+    justifyContent: "flex-end",
+  },
+  websiteBtn: {
+    backgroundColor: OWL.tagBg,
+    borderWidth: 0.7,
+    borderColor: OWL.label,
+    borderRadius: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2.5,
+  },
+  websiteBtnText: {
+    color: OWL.label,
+    fontSize: 8.5,
+    fontFamily: "Outfit", fontWeight: 700,
+  },
   name: {
     fontSize: 22,
     fontFamily: "Outfit", fontWeight: 700,
@@ -183,14 +218,55 @@ export function ResumePdf({ data }: { data: ResumeData }) {
     .filter(Boolean)
     .join(", ");
 
+  const websitesSection = custom_sections?.find(
+    (sec) => sec.title.trim().toLowerCase() === "websites"
+  );
+  const websites = (websitesSection?.items ?? [])
+    .map((item) => {
+      const trimmed = item.trim();
+      if (!trimmed) return null;
+      // Allow optional "label|url" syntax; otherwise auto-derive a short label.
+      const pipe = trimmed.indexOf("|");
+      const labelRaw = pipe > -1 ? trimmed.slice(0, pipe).trim() : "";
+      const urlSrc = pipe > -1 ? trimmed.slice(pipe + 1).trim() : trimmed;
+      const url = /^https?:\/\//i.test(urlSrc) ? urlSrc : `https://${urlSrc}`;
+      const host = url.replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
+      const parts = host.split(".");
+      const autoLabel = parts.length >= 3 ? parts[0] : host;
+      const label = labelRaw || autoLabel;
+      return { label, url };
+    })
+    .filter((w): w is { label: string; url: string } => w !== null);
+  const otherCustom = (custom_sections ?? []).filter(
+    (sec) => sec.title.trim().toLowerCase() !== "websites"
+  );
+
   return (
     <Document>
       <Page size="LETTER" style={s.page}>
 
         {/* Header */}
         <View style={s.header}>
-          <Text style={s.name}>{basics.name}</Text>
-          {basics.label && <Text style={s.label}>{basics.label}</Text>}
+          <View style={s.headerTopRow}>
+            <View style={s.headerLeft}>
+              <Text style={s.name}>{basics.name}</Text>
+              {basics.label && <Text style={s.label}>{basics.label}</Text>}
+            </View>
+            {websites.length > 0 && (
+              <View style={s.headerRight}>
+                <Text style={s.headerRightLabel}>CHECK MY WEBSITES</Text>
+                <View style={s.websitesGroup}>
+                  {websites.map((w, i) => (
+                    <Link key={i} src={w.url} style={{ textDecoration: "none" }}>
+                      <View style={s.websiteBtn}>
+                        <Text style={s.websiteBtnText}>{w.label}  ↗</Text>
+                      </View>
+                    </Link>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
           <View style={s.contactRow}>
             {basics.email && <Text>{basics.email}</Text>}
             {basics.phone && <Text>{basics.phone}</Text>}
@@ -339,8 +415,8 @@ export function ResumePdf({ data }: { data: ResumeData }) {
           </View>
         )}
 
-        {/* Custom sections */}
-        {custom_sections?.map((sec, i) => (
+        {/* Custom sections (websites are rendered in the header) */}
+        {otherCustom.map((sec, i) => (
           <View key={i} style={s.section}>
             <SectionTitle>{sec.title}</SectionTitle>
             {sec.items.map((item, j) => (
