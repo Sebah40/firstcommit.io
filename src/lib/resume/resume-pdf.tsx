@@ -1,5 +1,6 @@
-import { Document, Page, Text, View, StyleSheet, Font, Link } from "@react-pdf/renderer";
+import { Document, Page, Text as PdfText, View, StyleSheet, Font, Link as PdfLink } from "@react-pdf/renderer";
 import path from "path";
+import type { ReactNode, ComponentProps } from "react";
 import type { ResumeData } from "@/types";
 
 Font.register({
@@ -13,6 +14,28 @@ Font.register({
 
 // Don't break words with hyphens; wrap on word boundaries instead.
 Font.registerHyphenationCallback((word) => [word]);
+
+// fontkit shapes ligatures (fi, fl, ff, ffi, ffl) into single glyphs whose
+// ToUnicode CMap drops characters during text extraction — breaking ATS
+// parsing. Inserting U+200C (ZWNJ) between letters prevents ligature shaping
+// while remaining invisible in the rendered PDF.
+const ZWNJ = "‌";
+function breakLigatures(s: string): string {
+  return s.replace(/f(?=[fil])/gi, (m) => m + ZWNJ);
+}
+function processChildren(node: ReactNode): ReactNode {
+  if (typeof node === "string") return breakLigatures(node);
+  if (Array.isArray(node)) return node.map(processChildren);
+  return node;
+}
+type TextProps = ComponentProps<typeof PdfText> & { children?: ReactNode };
+type LinkProps = ComponentProps<typeof PdfLink> & { children?: ReactNode };
+function Text({ children, ...props }: TextProps) {
+  return <PdfText {...props}>{processChildren(children)}</PdfText>;
+}
+function Link({ children, ...props }: LinkProps) {
+  return <PdfLink {...props}>{processChildren(children)}</PdfLink>;
+}
 
 // Night Owl palette
 const OWL = {
