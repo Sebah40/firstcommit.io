@@ -9,8 +9,3 @@ supabase/.temp/
 .claude/settings.local.json
 next-env.d.ts
 tsconfig.tsbuildinfo
-TAILORING_RULES.md
-src/app/api/cron/
-src/lib/resume/generate-tailored-pdf.ts
-supabase/migrations/027_tailored_resumes_bucket.sql
-vercel.json
