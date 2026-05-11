@@ -1,6 +1,6 @@
 import { Document, Page, Text as PdfText, View, StyleSheet, Font, Link as PdfLink } from "@react-pdf/renderer";
 import path from "path";
-import type { ReactNode, ComponentProps } from "react";
+import React, { type ReactNode, type ComponentProps } from "react";
 import type { ResumeData } from "@/types";
 
 Font.register({
@@ -238,6 +238,7 @@ export function ResumePdf({ data }: { data: ResumeData }) {
     languages,
     certifications,
     custom_sections,
+    section_order,
   } = data;
 
   const location = [basics.location?.city, basics.location?.region, basics.location?.country]
@@ -309,150 +310,178 @@ export function ResumePdf({ data }: { data: ResumeData }) {
           {basics.summary && <Text style={s.summary}>{basics.summary}</Text>}
         </View>
 
-        {/* Experience */}
-        {work.length > 0 && (
-          <View style={s.section}>
-            <SectionTitle>Experience</SectionTitle>
-            {work.map((job, i) => (
-              <View key={i} style={s.entry}>
-                <View style={s.entryRow}>
-                  <View style={s.entryLeft}>
-                    <Text style={s.position}>{job.position}</Text>
-                    <Text style={s.company}>{job.company}</Text>
-                  </View>
-                  <Text style={s.dateText}>{dateRange(job.startDate, job.endDate)}</Text>
-                </View>
-                {job.highlights?.map((h, j) => (
-                  <View key={j} style={s.bulletRow}>
-                    <Text style={s.bulletMark}>›</Text>
-                    <BulletText text={h} />
-                  </View>
-                ))}
-              </View>
-            ))}
-          </View>
-        )}
+        {(() => {
+          const sections: Record<string, React.ReactNode> = {};
 
-        {/* Projects */}
-        {projects && projects.length > 0 && (
-          <View style={s.section}>
-            <SectionTitle>Projects</SectionTitle>
-            {projects.map((proj, i) => {
-              const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://firstcommit.io";
-              const projUrl = proj.url || (proj.guide_id ? `${siteUrl}/guide/${proj.guide_id}` : null);
-              return (
-              <View key={i} style={s.entry}>
-                <View style={s.entryRow}>
-                  <Text style={s.position}>{proj.name}</Text>
-                  {(proj.startDate || proj.endDate) && (
-                    <Text style={s.dateText}>{dateRange(proj.startDate, proj.endDate)}</Text>
-                  )}
-                </View>
-                {projUrl && (
-                  <Link src={projUrl} style={{ fontSize: 7.5, color: OWL.company, marginBottom: 2 }}>
-                    {projUrl.replace(/^https?:\/\//, "")}
-                  </Link>
-                )}
-                {proj.techs && proj.techs.length > 0 && (
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 3, marginTop: 2, marginBottom: 2 }}>
-                    {proj.techs.map((t, ti) => <Tag key={ti} label={t} color="#ecc48d" />)}
+          sections.work = work.length > 0 && (
+            <View key="work" style={s.section}>
+              <SectionTitle>Experience</SectionTitle>
+              {work.map((job, i) => (
+                <View key={i} style={s.entry}>
+                  <View style={s.entryRow}>
+                    <View style={s.entryLeft}>
+                      <Text style={s.position}>{job.position}</Text>
+                      <Text style={s.company}>{job.company}</Text>
+                    </View>
+                    <Text style={s.dateText}>{dateRange(job.startDate, job.endDate)}</Text>
                   </View>
-                )}
-                {proj.description && <Text style={s.jobSummary}>{proj.description}</Text>}
-                {proj.highlights?.map((h, j) => (
-                  <View key={j} style={s.bulletRow}>
-                    <Text style={s.bulletMark}>›</Text>
-                    <BulletText text={h} />
-                  </View>
-                ))}
-              </View>
-              );
-            })}
-          </View>
-        )}
-
-        {/* Skills */}
-        {skills.length > 0 && (
-          <View style={s.section}>
-            <SectionTitle>Skills</SectionTitle>
-            {skills.map((cat, i) => (
-              <View key={i} style={s.skillRow}>
-                <Text style={s.skillName}>{cat.name}</Text>
-                <View style={s.tagGroup}>
-                  {cat.keywords.map((kw, ki) => (
-                    <Tag key={ki} label={kw} color={SKILL_COLORS[i % SKILL_COLORS.length]} />
+                  {job.highlights?.map((h, j) => (
+                    <View key={j} style={s.bulletRow}>
+                      <Text style={s.bulletMark}>›</Text>
+                      <BulletText text={h} />
+                    </View>
                   ))}
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Education */}
-        {education.length > 0 && (
-          <View style={s.section}>
-            <SectionTitle>Education</SectionTitle>
-            {education.map((edu, i) => (
-              <View key={i} style={{ ...s.entryRow, marginBottom: 4 }}>
-                <View style={s.entryLeft}>
-                  <Text style={s.position}>{edu.institution}</Text>
-                  <Text style={{ color: OWL.contact, fontSize: 9 }}>
-                    {[edu.studyType, edu.area].filter(Boolean).join(" in ")}
-                  </Text>
-                </View>
-                <Text style={s.dateText}>{dateRange(edu.startDate, edu.endDate)}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Certifications */}
-        {certifications && certifications.length > 0 && (
-          <View style={s.section}>
-            <SectionTitle>Certifications</SectionTitle>
-            {certifications.map((cert, i) => (
-              <View key={i} style={{ ...s.entryRow, marginBottom: 4 }}>
-                <View style={s.entryLeft}>
-                  {cert.url ? (
-                    <Link src={cert.url} style={{ ...s.position, color: OWL.label, textDecoration: "underline" }}>{cert.name}</Link>
-                  ) : (
-                    <Text style={s.position}>{cert.name}</Text>
-                  )}
-                  {cert.issuer && <Text style={{ color: OWL.contact, fontSize: 9 }}>{cert.issuer}</Text>}
-                </View>
-                {cert.date && <Text style={s.dateText}>{fmtDate(cert.date)}</Text>}
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Languages */}
-        {languages && languages.length > 0 && (
-          <View style={s.section}>
-            <SectionTitle>Languages</SectionTitle>
-            <View style={s.langRow}>
-              {languages.map((lang, i) => (
-                <View key={i} style={s.langPair}>
-                  <Text style={s.langName}>{lang.language}</Text>
-                  {lang.fluency && <Text style={s.langFluency}>— {lang.fluency}</Text>}
                 </View>
               ))}
             </View>
-          </View>
-        )}
+          );
 
-        {/* Custom sections (websites are rendered in the header) */}
-        {otherCustom.map((sec, i) => (
-          <View key={i} style={s.section}>
-            <SectionTitle>{sec.title}</SectionTitle>
-            {sec.items.map((item, j) => (
-              <View key={j} style={s.bulletRow}>
-                <Text style={s.bulletMark}>›</Text>
-                <Text style={s.bulletText}>{item}</Text>
+          sections.projects = projects && projects.length > 0 && (
+            <View key="projects" style={s.section}>
+              <SectionTitle>Projects</SectionTitle>
+              {projects.map((proj, i) => {
+                const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://firstcommit.io";
+                const projUrl = proj.url || (proj.guide_id ? `${siteUrl}/guide/${proj.guide_id}` : null);
+                return (
+                  <View key={i} style={s.entry}>
+                    <View style={s.entryRow}>
+                      <Text style={s.position}>{proj.name}</Text>
+                      {(proj.startDate || proj.endDate) && (
+                        <Text style={s.dateText}>{dateRange(proj.startDate, proj.endDate)}</Text>
+                      )}
+                    </View>
+                    {projUrl && (
+                      <Link src={projUrl} style={{ fontSize: 7.5, color: OWL.company, marginBottom: 2 }}>
+                        {projUrl.replace(/^https?:\/\//, "")}
+                      </Link>
+                    )}
+                    {proj.techs && proj.techs.length > 0 && (
+                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 3, marginTop: 2, marginBottom: 2 }}>
+                        {proj.techs.map((t, ti) => <Tag key={ti} label={t} color="#ecc48d" />)}
+                      </View>
+                    )}
+                    {proj.description && <Text style={s.jobSummary}>{proj.description}</Text>}
+                    {proj.highlights?.map((h, j) => (
+                      <View key={j} style={s.bulletRow}>
+                        <Text style={s.bulletMark}>›</Text>
+                        <BulletText text={h} />
+                      </View>
+                    ))}
+                  </View>
+                );
+              })}
+            </View>
+          );
+
+          sections.skills = skills.length > 0 && (
+            <View key="skills" style={s.section}>
+              <SectionTitle>Skills</SectionTitle>
+              {skills.map((cat, i) => (
+                <View key={i} style={s.skillRow}>
+                  <Text style={s.skillName}>{cat.name}</Text>
+                  <View style={s.tagGroup}>
+                    {cat.keywords.map((kw, ki) => (
+                      <Tag key={ki} label={kw} color={SKILL_COLORS[i % SKILL_COLORS.length]} />
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </View>
+          );
+
+          sections.education = education.length > 0 && (
+            <View key="education" style={s.section}>
+              <SectionTitle>Education</SectionTitle>
+              {education.map((edu, i) => (
+                <View key={i} style={{ ...s.entryRow, marginBottom: 4 }}>
+                  <View style={s.entryLeft}>
+                    <Text style={s.position}>{edu.institution}</Text>
+                    <Text style={{ color: OWL.contact, fontSize: 9 }}>
+                      {[edu.studyType, edu.area].filter(Boolean).join(" in ")}
+                    </Text>
+                  </View>
+                  <Text style={s.dateText}>{dateRange(edu.startDate, edu.endDate)}</Text>
+                </View>
+              ))}
+            </View>
+          );
+
+          sections.certifications = certifications && certifications.length > 0 && (
+            <View key="certifications" style={s.section}>
+              <SectionTitle>Certifications</SectionTitle>
+              {certifications.map((cert, i) => (
+                <View key={i} style={{ ...s.entryRow, marginBottom: 4 }}>
+                  <View style={s.entryLeft}>
+                    {cert.url ? (
+                      <Link src={cert.url} style={{ ...s.position, color: OWL.label, textDecoration: "underline" }}>{cert.name}</Link>
+                    ) : (
+                      <Text style={s.position}>{cert.name}</Text>
+                    )}
+                    {cert.issuer && <Text style={{ color: OWL.contact, fontSize: 9 }}>{cert.issuer}</Text>}
+                  </View>
+                  {cert.date && <Text style={s.dateText}>{fmtDate(cert.date)}</Text>}
+                </View>
+              ))}
+            </View>
+          );
+
+          sections.languages = languages && languages.length > 0 && (
+            <View key="languages" style={s.section}>
+              <SectionTitle>Languages</SectionTitle>
+              <View style={s.langRow}>
+                {languages.map((lang, i) => (
+                  <View key={i} style={s.langPair}>
+                    <Text style={s.langName}>{lang.language}</Text>
+                    {lang.fluency && <Text style={s.langFluency}>— {lang.fluency}</Text>}
+                  </View>
+                ))}
               </View>
-            ))}
-          </View>
-        ))}
+            </View>
+          );
+
+          sections.custom_sections = otherCustom.length > 0 && (
+            <React.Fragment key="custom_sections">
+              {otherCustom.map((sec, i) => (
+                <View key={i} style={s.section}>
+                  <SectionTitle>{sec.title}</SectionTitle>
+                  {sec.items.map((item, j) => (
+                    <View key={j} style={s.bulletRow}>
+                      <Text style={s.bulletMark}>›</Text>
+                      <Text style={s.bulletText}>{item}</Text>
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </React.Fragment>
+          );
+
+          const defaultOrder = [
+            "work",
+            "projects",
+            "skills",
+            "education",
+            "certifications",
+            "languages",
+            "custom_sections",
+          ] as const;
+
+          const seen = new Set<string>();
+          const ordered: string[] = [];
+          for (const key of section_order ?? []) {
+            if (!seen.has(key) && key in sections) {
+              ordered.push(key);
+              seen.add(key);
+            }
+          }
+          for (const key of defaultOrder) {
+            if (!seen.has(key)) {
+              ordered.push(key);
+              seen.add(key);
+            }
+          }
+
+          return ordered.map((key) => sections[key]);
+        })()}
 
       </Page>
     </Document>

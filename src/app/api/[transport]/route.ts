@@ -5,6 +5,7 @@ import { jwtVerify } from "jose";
 import { slugify } from "@/lib/utils";
 import { z } from "zod";
 import { generateResumePdf } from "@/lib/resume/generate-pdf";
+import { generateTailoredResumePdf } from "@/lib/resume/generate-tailored-pdf";
 
 const TOKEN_SECRET = new TextEncoder().encode(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -925,6 +926,19 @@ The resume renders at firstcommit.io/resume/{username} in Harvard format.`,
               title: z.string(),
               items: z.array(z.string()),
             })).optional(),
+            section_order: z.array(
+              z.enum([
+                "work",
+                "projects",
+                "skills",
+                "education",
+                "certifications",
+                "languages",
+                "custom_sections",
+              ])
+            ).optional().describe(
+              "Optional explicit ordering of resume sections in the PDF (top to bottom, below the header). Any section key omitted from this list is appended after the listed ones in default order (work, projects, skills, education, certifications, languages, custom_sections). Duplicate keys are ignored after the first occurrence. The 'basics' header always renders first and is not part of this list."
+            ),
           }).describe("Full structured resume data"),
           style_instructions: z.string().optional().describe("User's preferred style/tone for the resume (e.g., 'keep it concise', 'emphasize backend work')"),
           max_pages: z.number().int().min(1).max(4).optional().describe("Maximum number of pages for the PDF (default: 1). If the generated PDF exceeds this, the tool will report how many pages overflowed."),
@@ -992,6 +1006,153 @@ The resume renders at firstcommit.io/resume/{username} in Harvard format.`,
           // PDF generation failed — resume data is saved, just no PDF
           return {
             content: [{ type: "text" as const, text: `Resume data saved.\n\nView it at: ${resumeUrl}\n\n(PDF generation failed: ${pdfErr instanceof Error ? pdfErr.message : "unknown error"})` }],
+          };
+        }
+      }
+    );
+
+    // ── firstcommit_tailor_resume ───────────────────────────────
+    server.registerTool(
+      "firstcommit_tailor_resume",
+      {
+        title: "Tailor Resume To Job (one-shot PDF)",
+        description: `Generate a one-shot tailored resume PDF for a specific job posting. Returns a 24h signed URL — does NOT modify the user's living resume on First Commit.
+
+## Required workflow
+
+1. READ /TAILORING_RULES.md in the repo (or memorize the rules below) before crafting the rewrite. They exist to prevent obviously-AI-tailored output.
+2. Call firstcommit_read_resume to get the candidate's real resume_data (and resume_data_es if Spanish posting).
+3. Read the job posting the user pasted. Identify role vocabulary, must-have skills, and tone.
+4. Rewrite resume_data following TAILORING_RULES.md. Reframe — never fabricate. Substitute vocabulary — don't keyword-stuff. Preserve voice. Keep differentiators.
+5. Call this tool with the rewritten resume_data plus username, job_title, job_company.
+6. Open the returned signed_url in the user's browser.
+
+## Inputs
+
+- username: any First Commit username (resumes are public; storage is per-user).
+- resume_data: the rewritten resume in the same shape as firstcommit_update_resume. The tool does NOT validate against TAILORING_RULES — that's on you.
+- job_title / job_company: optional, used for filename and download disposition.
+
+## Output
+
+- signed_url: 24h-valid Supabase signed URL with attachment disposition.
+- expires_at: ISO timestamp when the URL stops working.
+
+## Hard rules summary (full version in /TAILORING_RULES.md)
+
+- Never copy 3+ word phrases verbatim from the posting.
+- Every claim maps to a real fact in the source resume.
+- Vocabulary substitution, not insertion. Bullet length stays similar.
+- Preserve the candidate's voice and language (en/es/mixed).
+- Hybrid headline, not the literal posting title.
+- If >40% of content was rewritten, you're overfitting — pull back.`,
+        inputSchema: {
+          username: z.string().describe("First Commit username of the candidate whose resume is being tailored."),
+          resume_data: z.object({
+            basics: z.object({
+              name: z.string(),
+              label: z.string().optional(),
+              email: z.string().optional(),
+              phone: z.string().optional(),
+              url: z.string().optional(),
+              location: z.object({
+                city: z.string().optional(),
+                region: z.string().optional(),
+                country: z.string().optional(),
+              }).optional(),
+              summary: z.string().optional(),
+              picture_url: z.string().optional(),
+            }),
+            education: z.array(z.object({
+              institution: z.string(),
+              area: z.string(),
+              studyType: z.string().optional(),
+              startDate: z.string().optional(),
+              endDate: z.string().optional(),
+              gpa: z.string().optional(),
+              honors: z.array(z.string()).optional(),
+              courses: z.array(z.string()).optional(),
+            })),
+            work: z.array(z.object({
+              company: z.string(),
+              position: z.string(),
+              startDate: z.string().optional(),
+              endDate: z.string().optional(),
+              summary: z.string().optional(),
+              highlights: z.array(z.string()).optional(),
+            })),
+            skills: z.array(z.object({
+              name: z.string(),
+              keywords: z.array(z.string()),
+            })),
+            projects: z.array(z.object({
+              name: z.string(),
+              description: z.string().optional(),
+              url: z.string().optional(),
+              guide_id: z.string().optional(),
+              techs: z.array(z.string()).optional(),
+              highlights: z.array(z.string()).optional(),
+              startDate: z.string().optional(),
+              endDate: z.string().optional(),
+            })).optional(),
+            certifications: z.array(z.object({
+              name: z.string(),
+              issuer: z.string().optional(),
+              date: z.string().optional(),
+              url: z.string().optional(),
+            })).optional(),
+            languages: z.array(z.object({
+              language: z.string(),
+              fluency: z.string().optional(),
+            })).optional(),
+            custom_sections: z.array(z.object({
+              title: z.string(),
+              items: z.array(z.string()),
+            })).optional(),
+          }).describe("Rewritten resume data following TAILORING_RULES.md."),
+          job_title: z.string().optional().describe("Target role title (used for filename)."),
+          job_company: z.string().optional().describe("Target company (used for filename)."),
+        },
+      },
+      async ({ username, resume_data, job_title, job_company }, extra) => {
+        const callerId = (extra.authInfo?.extra as { userId?: string })?.userId;
+        if (!callerId) {
+          return {
+            content: [{ type: "text" as const, text: "Error: Authentication required. Run `claude mcp add --transport http firstcommit https://firstcommit.io/api/mcp` and sign in first." }],
+          };
+        }
+
+        const supabase = getSupabase();
+        const { data: profile, error: profErr } = await supabase
+          .from("profiles")
+          .select("id, username")
+          .eq("username", username)
+          .single();
+
+        if (profErr || !profile) {
+          return {
+            content: [{ type: "text" as const, text: `No First Commit user with username "${username}".` }],
+          };
+        }
+
+        try {
+          const result = await generateTailoredResumePdf({
+            userId: profile.id,
+            resumeData: resume_data,
+            jobTitle: job_title,
+            jobCompany: job_company,
+          });
+
+          const payload = {
+            signed_url: result.signed_url,
+            expires_at: result.expires_at,
+            note: "Open signed_url in a browser. Link is valid for 24 hours. The user's living resume on First Commit was NOT modified.",
+          };
+
+          return { content: [{ type: "text" as const, text: JSON.stringify(payload, null, 2) }] };
+        } catch (err) {
+          return {
+            content: [{ type: "text" as const, text: `Error generating tailored PDF: ${err instanceof Error ? err.message : "unknown error"}` }],
           };
         }
       }

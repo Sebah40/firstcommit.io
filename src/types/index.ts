@@ -59,6 +59,9 @@ export interface ResumeData {
     title: string;
     items: string[];
   }>;
+  section_order?: Array<
+    "work" | "projects" | "skills" | "education" | "certifications" | "languages" | "custom_sections"
+  >;
 }
 
 export interface Profile {

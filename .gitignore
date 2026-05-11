@@ -5,3 +5,12 @@ node_modules/
 db-password
 supabase/.temp/
 .DS_Store
+.vercel
+.claude/settings.local.json
+next-env.d.ts
+tsconfig.tsbuildinfo
+TAILORING_RULES.md
+src/app/api/cron/
+src/lib/resume/generate-tailored-pdf.ts
+supabase/migrations/027_tailored_resumes_bucket.sql
+vercel.json
