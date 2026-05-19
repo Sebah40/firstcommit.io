@@ -12,20 +12,6 @@ function getReadClient() {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = getReadClient();
-
-  // Fetch all public guides
-  const { data: guides } = await supabase
-    .from("posts")
-    .select("id, title, updated_at")
-    .eq("is_hidden", false)
-    .order("updated_at", { ascending: false });
-
-  // Fetch all profiles with at least one guide
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("username, created_at");
-
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,
@@ -34,6 +20,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
   ];
+
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    return staticRoutes;
+  }
+
+  const supabase = getReadClient();
+
+  const { data: guides } = await supabase
+    .from("posts")
+    .select("id, title, updated_at")
+    .eq("is_hidden", false)
+    .order("updated_at", { ascending: false });
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("username, created_at");
 
   const guideRoutes: MetadataRoute.Sitemap = (guides ?? []).map((guide) => ({
     url: `${BASE_URL}/guide/${guide.id}/${slugify(guide.title)}`,
