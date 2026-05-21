@@ -56,6 +56,75 @@ const OWL = {
 
 const SKILL_COLORS = ["#ecc48d", "#ffcb8b", "#7fdbca", "#c792ea"];
 
+// Category colors mirror SKILL_COLORS order:
+// 0 = AI, 1 = Framework, 2 = Backend, 3 = Tools
+const CATEGORY_COLORS = {
+  ai: SKILL_COLORS[0],
+  framework: SKILL_COLORS[1],
+  backend: SKILL_COLORS[2],
+  tools: SKILL_COLORS[3],
+} as const;
+
+const TECH_CATEGORY: Record<string, keyof typeof CATEGORY_COLORS> = {
+  // AI & LLM
+  "Claude Code": "ai",
+  "Cursor": "ai",
+  "GitHub Copilot": "ai",
+  "Codex": "ai",
+  "Anthropic Claude API": "ai",
+  "Claude API": "ai",
+  "OpenAI API": "ai",
+  "LLM Agents": "ai",
+  "Tool Calling": "ai",
+  "MCP": "ai",
+  "Model Context Protocol": "ai",
+  "RAG": "ai",
+  "Copilot Studio": "ai",
+  "Microsoft Copilot Studio": "ai",
+  // Frameworks
+  "Python": "framework",
+  "TypeScript": "framework",
+  "JavaScript": "framework",
+  "Next.js": "framework",
+  "Next.js 16": "framework",
+  "Next.js 14 (App Router)": "framework",
+  "React": "framework",
+  "React 19": "framework",
+  "Node.js": "framework",
+  "Express": "framework",
+  "Tailwind": "framework",
+  "Tailwind CSS": "framework",
+  "Tailwind CSS v4": "framework",
+  "Canvas API": "framework",
+  // Backend & Data
+  "PostgreSQL": "backend",
+  "Supabase": "backend",
+  "pg": "backend",
+  "pg (node-postgres)": "backend",
+  "OAuth 2.0 / PKCE": "backend",
+  "OAuth 2.0": "backend",
+  "Database Design": "backend",
+  "Firebird": "backend",
+  "Firebird Database": "backend",
+  "SQL": "backend",
+  // Tools
+  "Docker": "tools",
+  "Kubernetes": "tools",
+  "Git": "tools",
+  "GitHub": "tools",
+  "Vercel": "tools",
+  "Azure": "tools",
+  "CI/CD": "tools",
+  "WhatsApp Coexistence API": "tools",
+  "Google Sheets API": "tools",
+  "ASP.NET scraping": "tools",
+};
+
+function getTechColor(tech: string): string {
+  const cat = TECH_CATEGORY[tech];
+  return cat ? CATEGORY_COLORS[cat] : SKILL_COLORS[0];
+}
+
 function fmtDate(d?: string | null): string {
   if (!d) return "";
   if (d.length === 4) return d;
@@ -325,6 +394,11 @@ export function ResumePdf({ data }: { data: ResumeData }) {
                     </View>
                     <Text style={s.dateText}>{dateRange(job.startDate, job.endDate)}</Text>
                   </View>
+                  {job.techs && job.techs.length > 0 && (
+                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 3, marginTop: 2, marginBottom: 2 }}>
+                      {job.techs.map((t, ti) => <Tag key={ti} label={t} color={getTechColor(t)} />)}
+                    </View>
+                  )}
                   {job.highlights?.map((h, j) => (
                     <View key={j} style={s.bulletRow}>
                       <Text style={s.bulletMark}>›</Text>
@@ -357,7 +431,7 @@ export function ResumePdf({ data }: { data: ResumeData }) {
                     )}
                     {proj.techs && proj.techs.length > 0 && (
                       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 3, marginTop: 2, marginBottom: 2 }}>
-                        {proj.techs.map((t, ti) => <Tag key={ti} label={t} color="#ecc48d" />)}
+                        {proj.techs.map((t, ti) => <Tag key={ti} label={t} color={getTechColor(t)} />)}
                       </View>
                     )}
                     {proj.description && <Text style={s.jobSummary}>{proj.description}</Text>}

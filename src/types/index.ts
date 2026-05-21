@@ -30,6 +30,7 @@ export interface ResumeData {
     endDate?: string;
     summary?: string;
     highlights?: string[];
+    techs?: string[];
   }>;
   skills: Array<{
     name: string;
