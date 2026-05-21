@@ -37,24 +37,26 @@ function Link({ children, ...props }: LinkProps) {
   return <PdfLink {...props}>{processChildren(children)}</PdfLink>;
 }
 
-// Night Owl palette
+// Light minimalist palette (white bg, professional)
 const OWL = {
-  bg: "#011627",
-  fg: "#a8b2d8",
-  name: "#d6deeb",
-  label: "#7fdbca",
-  contact: "#4d7f8f",
-  company: "#82aaff",
-  date: "#637777",
-  section: "#c792ea",
-  divider: "#0d2436",
-  bullet: "#7fdbca",
-  tagBg: "#01223a",
-  tagBorder: "#1e3a4a",
-  italic: "#4d7f8f",
+  bg: "#ffffff",
+  fg: "#1f2937",
+  name: "#0f172a",
+  label: "#0891b2",
+  contact: "#64748b",
+  company: "#1d4ed8",
+  date: "#94a3b8",
+  section: "#7c3aed",
+  divider: "#e5e7eb",
+  bullet: "#0891b2",
+  tagBg: "#f9fafb",
+  tagBorder: "#e5e7eb",
+  italic: "#94a3b8",
 };
 
-const SKILL_COLORS = ["#ecc48d", "#ffcb8b", "#7fdbca", "#c792ea"];
+// Tag text colors (saturated, legible on light tagBg)
+// Order: AI, Framework, Backend, Tools — matches CATEGORY_COLORS below.
+const SKILL_COLORS = ["#b45309", "#1d4ed8", "#047857", "#6d28d9"];
 
 // Category colors mirror SKILL_COLORS order:
 // 0 = AI, 1 = Framework, 2 = Backend, 3 = Tools
